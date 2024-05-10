@@ -1,10 +1,12 @@
 import { Stage } from "../../stage";
+import { DataBus } from "../utils/DataBus";
 import { EventType, GEvent } from "../utils/GEvent";
 import { BaseNode } from "./BaseNode"
 import * as PIXI from 'pixi.js';
+
 interface SocketConnection {
-    node: BaseNode
-    socket: NodeSocket
+    node: string
+    socket: string
 }
 export class NodeSocket {
     public key: string
@@ -49,7 +51,7 @@ export class NodeSocket {
         GEvent.on(EventType.PointerCancel, this.stagePointerOut.bind(this))
         GEvent.on(EventType.PointerMove, this.onpointermove.bind(this))
     }
-    private onpointermove(e: PIXI.FederatedPointerEvent, stage: Stage) {
+    private onpointermove(e: PIXI.FederatedPointerEvent, _stage: Stage) {
         if (!this.pointer.down) {
             return
         }
@@ -61,7 +63,7 @@ export class NodeSocket {
         this.view.lineTo(end.x, end.y)
         this.view.stroke({ color: 0xf86d62, width: 4 })
 
-        const socket = this.checkAdsorption(e.x, e.y, stage.nodes)
+        const socket = this.checkAdsorption(e.x, e.y, DataBus.nodes)
         if (socket) {
             socket.active()
         }
@@ -91,29 +93,77 @@ export class NodeSocket {
             }
         }
     }
-    private adsorp(socket:NodeSocket) {
+    private adsorp(socket: NodeSocket) {
         this.connection = {
-            node: socket.parent,
-            socket: socket
+            node: socket.parent.id,
+            socket: socket.key
         }
+        this.parent.updateSocket(this)
     }
-    private stagePointerOut(e: PIXI.FederatedPointerEvent, stage: Stage) {
+
+    private disconnect() {
+        this.connection = undefined
+        this.parent.updateSocket(this)
+    }
+
+    private connectSocket(socket?: NodeSocket) {
+        if (!socket) {
+            return
+        }
+        this.rerender()
+        this.view.beginPath()
+        this.view.moveTo(5, 5)
+        let end = socket.view.toGlobal(new PIXI.Point(0, 0))
+        end = this.view.toLocal(end)
+        this.view.lineTo(end.x + 5, end.y + 5)
+        this.view.stroke({ color: 0xffffff, width: 4 })
+    }
+
+    chechConnection() {
+        if (this.isActive) {
+            return
+        }
+        if (!this.connection) {
+            return
+        }
+        const node = DataBus.nodes.find(node => node.id === this.connection?.node)
+        if (!node) {
+            return
+        }
+        let socket: NodeSocket | undefined
+        if (this.type === 'output') {
+            const input = node.inputs.find(input => input.socket?.key === this.connection?.socket)
+            socket = input?.socket
+        } else {
+            const output = node.outputs.find(output => output.socket?.key === this.connection?.socket)
+            socket = output?.socket
+        }
+        this.connectSocket(socket)
+    }
+
+    private stagePointerOut(e: PIXI.FederatedPointerEvent, _stage: Stage) {
         this.parent.view.zIndex = 0
         if (this.pointer.down) {
-            const socket = this.checkAdsorption(e.x, e.y, stage.nodes)
-            if(socket){
+            const socket = this.checkAdsorption(e.x, e.y, DataBus.nodes)
+            if (socket) {
                 this.adsorp(socket)
+            } else {
+                this.disconnect()
             }
-            
+            this.isActive = false
         }
         this.pointer.down = false
         this.rerender()
     }
     private onpointerdown(e: PIXI.FederatedPointerEvent) {
+        if (this.type === 'input') {
+            return
+        }
         this.pointer.down = true
         this.pointer.x = e.globalX
         this.pointer.y = e.globalY
         this.parent.view.zIndex = 100
+        this.isActive = true
     }
 
     rerender() {
@@ -121,6 +171,10 @@ export class NodeSocket {
         this.view.beginPath()
         this.view.arc(0, 5, 10, 0, 2 * Math.PI);
         this.view.fill(0xffffff);
+        if (this.connection) {
+            this.view.stroke(0xff0000);
+        }
+
     }
 
     active() {
