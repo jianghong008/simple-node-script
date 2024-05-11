@@ -13,4 +13,5 @@ interface NodeData {
     title: string
     inputs: SocketObjectData[]
     outputs: SocketObjectData[]
+    attributes: NodeAttribute[]
 }

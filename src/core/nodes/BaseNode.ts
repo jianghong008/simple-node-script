@@ -1,14 +1,8 @@
 import * as PIXI from 'pixi.js';
 import { EventType, GEvent } from '../utils/GEvent';
 import { NodeSocket } from './NodeSocket';
-interface SocketObject {
-    key: string
-    socket?: NodeSocket
-    parms?: {
-        node: string
-        socket: string
-    }
-}
+import { Select } from '@pixi/ui';
+
 export class BaseNode {
     public id = ''
     public title: PIXI.Text
@@ -18,6 +12,7 @@ export class BaseNode {
     private content: PIXI.Container
     private outputBox: PIXI.Container
     private inputsBox: PIXI.Container
+    private attributesBox: PIXI.Container
     public boxRadius = 2
     public outputName = 'output'
     public edit = {
@@ -31,6 +26,7 @@ export class BaseNode {
     public padding = 5
     private _outputs: SocketObject[] = []
     private _inputs: SocketObject[] = []
+    private _attributes: NodeAttribute[] = []
     public titleContent = ''
     constructor(title = 'node') {
         this.titleContent = title
@@ -53,11 +49,14 @@ export class BaseNode {
         });
         this.content.addChild(this.title);
 
-        this.outputBox = new PIXI.Container({ x: this.width/2-this.padding, y: this.padding });
-        this.outputBox.width = this.width/2
+        this.attributesBox = new PIXI.Container({ x: 10, y: this.padding + 18 });
+        this.content.addChild(this.attributesBox);
+
+        this.outputBox = new PIXI.Container({ x: this.width / 2 - this.padding, y: this.padding });
+        this.outputBox.width = this.width / 2
         this.content.addChild(this.outputBox);
         this.inputsBox = new PIXI.Container({ x: 10, y: this.padding });
-        this.inputsBox.width = this.width/2
+        this.inputsBox.width = this.width / 2
         this.content.addChild(this.inputsBox);
 
         this.createView();
@@ -73,6 +72,9 @@ export class BaseNode {
     }
     get inputs() {
         return this._inputs
+    }
+    get attributes() {
+        return this._attributes
     }
     get x() {
         return this.view.x
@@ -117,7 +119,7 @@ export class BaseNode {
         this.dragging.isDragging = true
         this.dragging.x = e.clientX
         this.dragging.y = e.clientY
-        this.view.zIndex = 100
+        this.view.zIndex = 1
     }
     private onpointermove(e: PIXI.FederatedPointerEvent) {
         if (this.dragging.isDragging) {
@@ -185,7 +187,7 @@ export class BaseNode {
 
     private createInputs() {
         this.inputsBox.removeChildren();
-        const top = this.title.getBounds().height + this.padding / 2
+        const top = this.attributesBox.getBounds().height + this.attributesBox.y + this.padding / 2
         for (let i = 0; i < this._inputs.length; i++) {
             const input = this._inputs[i];
             const y = this.padding + 20 * i * 1.5 + top
@@ -231,9 +233,9 @@ export class BaseNode {
     }
 
     private createOutputs() {
-        const top = this.title.getBounds().height + this.padding / 2
+        const top = this.attributesBox.getBounds().height + this.attributesBox.y + this.padding / 2
         this.outputBox.removeChildren();
-        const x = this.width / 2 - this.padding/2
+        const x = this.width / 2 - this.padding / 2
         for (let i = 0; i < this._outputs.length; i++) {
             const output = this._outputs[i];
             const y = this.padding + 20 * i * 1.5 + top
@@ -261,7 +263,8 @@ export class BaseNode {
                     style: {
                         fontSize: 16,
                         fill: 0xffffff,
-                        trim: true
+                        trim: true,
+
                     }
                 })
                 more.y = y + 8
@@ -338,7 +341,114 @@ export class BaseNode {
         if (index > -1) {
             this._outputs.splice(index, 1)
             this.createOutputs()
-            
+
         }
+    }
+
+    addAttribute(attr: NodeAttribute) {
+        this._attributes.push(attr)
+        this.createAttributes()
+        this.rerender()
+    }
+
+    private createAttributes() {
+        this.attributesBox.removeChildren();
+
+        for (let i = 0; i < this._attributes.length; i++) {
+            const attribute = this._attributes[i];
+            const text = new PIXI.Text({
+                text: attribute.name,
+                style: {
+                    fontSize: 16,
+                    fill: 0xffffff,
+                    wordWrap: false,
+                    wordWrapWidth: 60,
+                    trim: true,
+                    align: 'center'
+                }
+            })
+            text.y = this.padding + 20 * i * 1.5
+            this.attributesBox.addChild(text);
+
+            if (attribute.options) {
+                const select = this.createAttrSelect(text.x + 60, text.y, attribute)
+                this.attributesBox.addChild(select);
+
+            }
+
+        }
+    }
+
+    private createAttrSelect(x: number, y: number, attr: NodeAttribute) {
+        const w = 80
+        const h = 20
+        const closedBG = new PIXI.Graphics()
+        closedBG.rect(0, 0, w, h)
+        closedBG.fill(0x3f51b5)
+        const openBG = new PIXI.Graphics()
+        openBG.rect(0, 0, w, h * (attr.options || []).length)
+        openBG.fill(0x3f51b5)
+        // options
+        const defaultIndex = attr.options?.indexOf(attr.value)
+        const select = new Select({
+            closedBG,
+            openBG,
+            textStyle: {
+                fontSize: 16,
+                fill: 0xffffff,
+                wordWrap: false,
+                wordWrapWidth: 60,
+                trim: true,
+                align: 'center'
+            },
+            items: {
+                items: attr.options || [],
+                backgroundColor: '#3f51b5',
+                hoverColor: '#263274',
+                width: w,
+                height: h,
+                textStyle: {
+                    fontSize: 16,
+                    fill: 0xffffff,
+                    wordWrap: false,
+                    wordWrapWidth: 60,
+                    trim: true,
+                    align: 'center'
+                },
+                radius: 4
+            },
+            selected: defaultIndex,
+            scrollBox: {
+                width: w,
+                height: h * (attr.options || []).length,
+                radius: 4
+            }
+        });
+
+        select.x = x
+        select.y = y
+        select.onpointerenter = () => {
+            select.zIndex = 200
+            this.outputBox.visible = false
+            select.open()
+        }
+        select.onpointerleave = () => {
+            select.zIndex = 0
+            this.outputBox.visible = true
+            select.close()
+        }
+        select.onpointerout = () => {
+            select.zIndex = 0
+            this.outputBox.visible = true
+            select.close()
+        }
+        select.onSelect.connect((_: number, value: string) => {
+            this.setAttribute(attr, value)
+        })
+        return select
+    }
+
+    private setAttribute(attr: NodeAttribute, value: any) {
+        attr.value = value
     }
 }

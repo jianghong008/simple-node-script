@@ -10,6 +10,7 @@ export class NodeUtils {
                 y: node.y,
                 inputs: NodeUtils.getInputs(node),
                 outputs: NodeUtils.getOutputs(node),
+                attributes: node.attributes
             }
             return json
         })
@@ -46,6 +47,9 @@ export class NodeUtils {
             n.id = node.id
             n.x = node.x
             n.y = node.y
+            node.attributes.forEach(attr => {
+                n.addAttribute(attr)
+            })
             node.inputs.forEach(input => {
                 n.addInput({
                     key: input.key,

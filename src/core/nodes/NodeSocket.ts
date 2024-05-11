@@ -83,7 +83,7 @@ export class NodeSocket {
                 if (!socket) {
                     continue
                 }
-                if(socket.isBussing){
+                if (socket.isBussing) {
                     continue
                 }
                 const end = socket.view.toGlobal(new PIXI.Point(0, 0))
@@ -98,7 +98,7 @@ export class NodeSocket {
         }
     }
     private adsorp(socket: NodeSocket) {
-        if(socket.isBussing){
+        if (socket.isBussing) {
             return
         }
         this.connection = {
@@ -109,6 +109,21 @@ export class NodeSocket {
     }
 
     private disconnect() {
+        const node = DataBus.nodes.find(node => node.id === this.connection?.node)
+        if (!node) {
+            return
+        }
+        let socket: NodeSocket | undefined
+        if (this.type === 'output') {
+            const input = node.inputs.find(input => input.socket?.key === this.connection?.socket)
+            socket = input?.socket
+        } else {
+            const output = node.outputs.find(output => output.socket?.key === this.connection?.socket)
+            socket = output?.socket
+        }
+        if (socket) {
+            socket.isBussing = false
+        }
         this.connection = undefined
         this.parent.updateSocket(this)
     }
