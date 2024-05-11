@@ -155,7 +155,8 @@ export class BaseNode {
     }
 
     private rerender() {
-        const rect = this.view.getLocalBounds();
+        this.background.height = 0
+        const rect = this.view.getBounds()
         this.content.x = this.padding
         this.content.y = this.padding
         // this.content.width = rect.width - 2 * this.padding
@@ -281,7 +282,6 @@ export class BaseNode {
         }
         const y = this.padding + 20 * this._outputs.length * 1.5 + top
         this.createOutputAddAction(x - 10, y)
-
         this.rerender()
     }
 
@@ -338,6 +338,7 @@ export class BaseNode {
         if (index > -1) {
             this._outputs.splice(index, 1)
             this.createOutputs()
+            
         }
     }
 }

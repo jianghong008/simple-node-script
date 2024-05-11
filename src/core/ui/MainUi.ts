@@ -2,7 +2,7 @@ import * as PIXI from 'pixi.js';
 import * as UI from '@pixi/ui'
 import { NodeUtils } from '../utils/NodeUtils';
 import { DataBus } from '../utils/DataBus';
-import { MainNode } from '../nodes/MainNode';
+import { LogicNode } from '../nodes/LogicNode';
 export class MainUi {
     public view: PIXI.Container
     constructor() {
@@ -73,7 +73,7 @@ export class MainUi {
 
     }
     private newNode() {
-        const node = new MainNode()
+        const node = new LogicNode()
         node.x = DataBus.app.screen.width / 2 - node.width / 2
         node.y = DataBus.app.screen.height / 2 - node.width / 2
         DataBus.nodesBox.addChild(node.view)

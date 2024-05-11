@@ -15,6 +15,7 @@ export class NodeSocket {
     public parent: BaseNode
     public isActive = false
     public type: 'input' | 'output' = 'input'
+    public isBussing = false
     private pointer = {
         down: false,
         x: 0,
@@ -82,6 +83,9 @@ export class NodeSocket {
                 if (!socket) {
                     continue
                 }
+                if(socket.isBussing){
+                    continue
+                }
                 const end = socket.view.toGlobal(new PIXI.Point(0, 0))
                 const distance = Math.sqrt(Math.pow(pos.x - end.x, 2) + Math.pow(pos.y - end.y, 2))
 
@@ -94,6 +98,9 @@ export class NodeSocket {
         }
     }
     private adsorp(socket: NodeSocket) {
+        if(socket.isBussing){
+            return
+        }
         this.connection = {
             node: socket.parent.id,
             socket: socket.key
@@ -117,6 +124,8 @@ export class NodeSocket {
         end = this.view.toLocal(end)
         this.view.lineTo(end.x + 5, end.y + 5)
         this.view.stroke({ color: 0xffffff, width: 4 })
+
+        socket.isBussing = true
     }
 
     chechConnection() {
