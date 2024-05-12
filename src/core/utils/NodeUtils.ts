@@ -1,13 +1,14 @@
 import { BaseNode } from "../nodes/BaseNode";
 
 export class NodeUtils {
-    static toJson(nodes: BaseNode[]) {
+    static encode(nodes: BaseNode[]) {
         const ar = nodes.map(node => {
             const json = {
                 id: node.id,
                 title: node.titleContent,
-                x: node.x,
-                y: node.y,
+                x: Math.round(node.x),
+                y: Math.round(node.y),
+                type: node.className,
                 inputs: NodeUtils.getInputs(node),
                 outputs: NodeUtils.getOutputs(node),
                 attributes: node.attributes
@@ -15,7 +16,7 @@ export class NodeUtils {
             return json
         })
 
-        return JSON.stringify(ar)
+        return ar
     }
     static getInputs(node: BaseNode): SocketObjectData[] {
         return node.inputs.map(input => {
@@ -34,36 +35,49 @@ export class NodeUtils {
         })
     }
 
-    static parseJson(json: string | Object) {
-        let ar: any
-        if (typeof json === 'string') {
-            ar = JSON.parse(json)
-        } else {
-            ar = json
-        }
-
-        const nodes = ar.map((node: NodeData) => {
-            const n = new BaseNode(node.title)
+    static async decode(ar: NodeData[]) {
+        const nodes: BaseNode[] = []
+        for (const node of ar) {
+            const n = await NodeUtils.newNode(node.type, node.title)
+            if (!n) {
+                return
+            }
             n.id = node.id
             n.x = node.x
             n.y = node.y
-            node.attributes.forEach(attr => {
+            for (const attr of node.attributes) {
                 n.addAttribute(attr)
-            })
-            node.inputs.forEach(input => {
+            }
+            for (const input of node.inputs) {
                 n.addInput({
                     key: input.key,
                     parms: input.connection
                 })
-            })
-            node.outputs.forEach(output => {
+            }
+            for (const output of node.outputs) {
                 n.addOutput({
                     key: output.key,
                     parms: output.connection
                 })
-            })
-            return n
-        })
-        return nodes as BaseNode[]
+            }
+
+            nodes.push(n)
+        }
+        return nodes
+    }
+
+    static async newNode(t: string, newName: string): Promise<BaseNode | undefined> {
+        try {
+            const nodeName = `${t}Node`
+            const nodeClass = await import(`../nodes/${nodeName}.ts`)
+            if (!nodeClass[nodeName]) {
+                console.error(`node ${nodeName} not found`)
+                return
+            }
+            return new nodeClass[nodeName](newName)
+        } catch (error) {
+            console.error(error)
+            return
+        }
     }
 }

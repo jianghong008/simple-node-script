@@ -19,4 +19,9 @@ export class DataBus {
     public static clear() {
         this._data = {}
     }
+
+    public static reMoveNode(node: BaseNode) {
+        this.nodes = this.nodes.filter(n => n !== node)
+        this.nodesBox.removeChild(node.view)
+    }
 }

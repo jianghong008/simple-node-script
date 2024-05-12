@@ -2,6 +2,7 @@ import * as PIXI from 'pixi.js';
 import { EventType, GEvent } from '../utils/GEvent';
 import { NodeSocket } from './NodeSocket';
 import { Select } from '@pixi/ui';
+import { DataBus } from '../utils/DataBus';
 
 export class BaseNode {
     public id = ''
@@ -15,8 +16,11 @@ export class BaseNode {
     private attributesBox: PIXI.Container
     public boxRadius = 2
     public outputName = 'output'
+    public type = 'node'
+    public className = 'BaseNode'
     public edit = {
         out: false,
+        delete: true
     }
     private dragging = {
         x: 0,
@@ -29,6 +33,7 @@ export class BaseNode {
     private _attributes: NodeAttribute[] = []
     public titleContent = ''
     constructor(title = 'node') {
+        this.className = this.constructor.name.replace('Node', '')
         this.titleContent = title
         this.createID()
         this.view = new PIXI.Container();
@@ -67,6 +72,9 @@ export class BaseNode {
         const id = `node_${this.titleContent}_${date}`
         this.id = id
     }
+    getAttribute(key: string) {
+        return this._attributes.find(attr => attr.name === key)
+    }
     get outputs() {
         return this._outputs
     }
@@ -87,6 +95,11 @@ export class BaseNode {
     }
     set y(v) {
         this.view.y = v
+    }
+    center() {
+        this.x = (DataBus.app.screen.width - this.width) / 2
+        this.view.y = (DataBus.app.screen.height - this.width) / 2
+        this.view.zIndex = 100
     }
     update() {
         this._inputs.forEach(input => {
@@ -152,8 +165,25 @@ export class BaseNode {
         this.view.onpointerdown = this.onpointerdown.bind(this)
         this.view.onpointerup = this.onpointerup.bind(this)
         this.view.onpointerout = this.onpointerout.bind(this)
-
+        this.view.onpointertap = this.onpointertap.bind(this)
         this.initEvents()
+    }
+
+    private onpointertap(e: PIXI.FederatedPointerEvent) {
+        if (e.button === 2) {
+            if (!this.edit.delete) {
+                return
+            }
+            const hasInput = this._inputs.find(input => input.socket?.isBussing === true)
+            if (hasInput) {
+                return
+            }
+            const hasOutput = this._outputs.find(output => output.parms !== undefined)
+            if (hasOutput) {
+                return
+            }
+            DataBus.reMoveNode(this)
+        }
     }
 
     private rerender() {
@@ -166,11 +196,17 @@ export class BaseNode {
     }
 
     addOutput(output: SocketObject) {
+        if(this._outputs.find(item => item.key === output.key)) {
+            return
+        }
         this._outputs.push(output)
         this.createOutputs()
     }
 
     addInput(input: SocketObject) {
+        if(this._inputs.find(item => item.key === input.key)) {
+            return
+        }
         this._inputs.push(input)
         this.createInputs()
     }
@@ -339,6 +375,9 @@ export class BaseNode {
     private onRemoveOutput(key: string) {
         const index = this._outputs.findIndex(v => v.key === key)
         if (index > -1) {
+            if (this._outputs[index].socket.connection !== undefined) {
+                return
+            }
             this._outputs.splice(index, 1)
             this.createOutputs()
 
@@ -346,6 +385,9 @@ export class BaseNode {
     }
 
     addAttribute(attr: NodeAttribute) {
+        if(this._attributes.find(item => item.name === attr.name)) {
+            return
+        }
         this._attributes.push(attr)
         this.createAttributes()
         this.rerender()
@@ -447,8 +489,30 @@ export class BaseNode {
         })
         return select
     }
-
+    getDefaultValue() {
+        let val: any
+        const t = this.getAttribute('type')
+        if (!t) {
+            return
+        }
+        switch (t.type) {
+            case 'string':
+                val = '';
+                break
+            case 'number':
+                val = 0;
+                break
+            case 'boolean':
+                val = false;
+                break
+            case 'array':
+                val = [];
+                break
+        }
+        return val
+    }
     private setAttribute(attr: NodeAttribute, value: any) {
-        attr.value = value
+        attr.type = value
+        attr.value = this.getDefaultValue()
     }
 }

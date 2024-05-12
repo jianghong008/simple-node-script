@@ -1,6 +1,4 @@
 
-type OperatorType = '+' | '-' | '*' | '/' | '%' | '^' | '&' | '|' | '<' | '>' | '=' | '!' | '~' | '<<' | '>>' | '>>>' | '&=' | '|=' | '<<=' | '>>=' | '>>>=' | '**'
-
 interface SocketObject {
     key: string
     socket?: NodeSocket
@@ -9,8 +7,6 @@ interface SocketObject {
         socket: string
     }
 }
-
-type VariableType = 'string' | 'number' | 'boolean' | 'array'
 
 interface NodeAttribute {
     name: string

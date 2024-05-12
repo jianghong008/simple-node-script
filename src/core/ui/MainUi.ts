@@ -1,8 +1,10 @@
 import * as PIXI from 'pixi.js';
 import * as UI from '@pixi/ui'
-import { NodeUtils } from '../utils/NodeUtils';
 import { DataBus } from '../utils/DataBus';
 import { TopMenus } from './config';
+import { SgScript } from '../utils/SgScript';
+import { Svm } from '../svm/VM';
+import { NodeUtils } from '../utils/NodeUtils';
 export class MainUi {
     public view: PIXI.Container
     constructor() {
@@ -123,22 +125,28 @@ export class MainUi {
         return newBtn
     }
     private saveScript() {
-        const json = NodeUtils.toJson(DataBus.nodes)
+        const json = SgScript.encode({
+            x: DataBus.nodesBox.x,
+            y: DataBus.nodesBox.y,
+            scale: DataBus.nodesBox.scale.x
+        }, DataBus.nodes)
         console.log(json)
     }
     private runScript() {
-
+        const vm = new Svm()
+        vm.execute(DataBus.nodes)
     }
     private async newNode(t: string) {
         try {
             const nodeName = `${t}Node`
-            const nodeClass = await import(`../nodes/${nodeName}.ts`)
-            if (!nodeClass[nodeName]) {
+            const count = DataBus.nodes.filter(node => node.titleContent.includes(t)).length
+            const newName = `${t}_${count}`
+            const node = await NodeUtils.newNode(t, newName)
+            if (!node) {
+                console.error(`node ${nodeName} not found`)
                 return
             }
-            const count = DataBus.nodes.filter(node => node instanceof nodeClass[nodeName]).length
-            const newName = `${t}_${count}`
-            const node = new nodeClass[nodeName](newName)
+
             node.x = DataBus.app.screen.width / 2 - node.width / 2
             node.y = DataBus.app.screen.height / 2 - node.width / 2
             DataBus.nodesBox.addChild(node.view)
@@ -150,7 +158,11 @@ export class MainUi {
     private async loadScript() {
         const data = await import('../../../data/sgs.json')
         DataBus.nodesBox.removeChildren()
-        DataBus.nodes = NodeUtils.parseJson(data.default)
+        const script = await SgScript.decode(data.default as any)
+        DataBus.nodes = script.nodes
+        DataBus.nodesBox.x = script.data.stage.x
+        DataBus.nodesBox.y = script.data.stage.y
+        DataBus.nodesBox.scale.set(script.data.stage.scale)
         DataBus.nodes.forEach(node => {
             DataBus.nodesBox.addChild(node.view)
         })

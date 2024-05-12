@@ -11,7 +11,24 @@ interface NodeData {
     x: number
     y: number
     title: string
+    type: string
     inputs: SocketObjectData[]
     outputs: SocketObjectData[]
     attributes: NodeAttribute[]
+}
+
+interface SgscriptStage {
+    x: number
+    y: number
+    scale: number
+}
+
+interface SgscriptData {
+    nodes: NodeData[]
+    stage: SgscriptStage
+}
+
+interface SgScriptObject {
+    data: SgscriptData
+    nodes: BaseNode[]
 }

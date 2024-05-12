@@ -1,10 +1,10 @@
-import { BaseNode } from "./BaseNode";
+import { BuiltInFunc } from "./BuiltInFunc";
 
-export class PrintNode extends BaseNode {
+export class PrintNode extends BuiltInFunc {
 
     constructor(name?: string) {
         super(name ? name : 'Print');
-        this.edit.out = false
+        this.funcName = 'print';
         this.addInput({ key: 'input' })
         this.refresh()
     }

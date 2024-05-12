@@ -105,6 +105,11 @@ export class NodeSocket {
             node: socket.parent.id,
             socket: socket.key
         }
+        socket.isBussing = true
+        socket.connection = {
+            node: this.parent.id,
+            socket: this.key
+        }
         this.parent.updateSocket(this)
     }
 
@@ -123,6 +128,7 @@ export class NodeSocket {
         }
         if (socket) {
             socket.isBussing = false
+            socket.connection = undefined
         }
         this.connection = undefined
         this.parent.updateSocket(this)
@@ -140,6 +146,10 @@ export class NodeSocket {
         this.view.lineTo(end.x + 5, end.y + 5)
         this.view.stroke({ color: 0xffffff, width: 4 })
 
+        socket.connection = {
+            node: this.parent.id,
+            socket: this.key
+        }
         socket.isBussing = true
     }
 
@@ -183,6 +193,7 @@ export class NodeSocket {
         if (this.type === 'input') {
             return
         }
+        this.disconnect()
         this.pointer.down = true
         this.pointer.x = e.globalX
         this.pointer.y = e.globalY

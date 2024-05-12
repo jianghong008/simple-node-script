@@ -3,6 +3,7 @@ export class LoopNode extends BaseNode {
     constructor(name?: string) {
         super(name ? name : 'Loop')
         this.edit.out = true
+        this.type = 'Loop'
         this.outputName = 'line'
         this.addInput({ key: 'condition' })
         this.refresh()
