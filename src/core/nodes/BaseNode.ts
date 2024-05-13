@@ -19,6 +19,7 @@ export class BaseNode {
     public outputName = 'output'
     public type = 'node'
     public className = 'BaseNode'
+    public isError = false
     public edit = {
         out: false,
         delete: true
@@ -34,6 +35,7 @@ export class BaseNode {
     private _attributes: NodeAttribute[] = []
     public titleContent = ''
     public onConnect?: (from: NodeSocket, to: NodeSocket) => void
+    public onAttibuteChange?: (attr: NodeAttribute) => void
     constructor(title = 'node') {
         this.className = this.constructor.name.replace('Node', '')
         this.titleContent = title
@@ -123,8 +125,8 @@ export class BaseNode {
         this.view.cursor = 'default'
         this.background.clear()
         this.background.roundRect(0, 0, this.width, 100, this.boxRadius);
-        this.background.fill('#6e88ff');
-        this.background.stroke('#4e58bf')
+        this.background.fill('#5469ca');
+        this.background.stroke('#5469ca')
         this.view.zIndex = 0
     }
     private onpointerdown(e: PIXI.FederatedPointerEvent) {
@@ -147,8 +149,8 @@ export class BaseNode {
     private onpointerenter() {
         this.background.clear()
         this.background.roundRect(0, 0, this.width, 100, this.boxRadius);
-        this.background.fill('#6e88ff');
-        this.background.stroke({ color: '#bdc421', width: 1 })
+        this.background.fill('#5469ca');
+        this.background.stroke({ color: '#ffff21', width: 2 })
     }
     private stagePointerOut() {
         this.dragging.isDragging = false
@@ -161,8 +163,8 @@ export class BaseNode {
     }
     private createView() {
         this.background.roundRect(0, 0, this.width, 100, this.boxRadius);
-        this.background.fill('#6e88ff');
-        this.background.stroke('#4e58bf')
+        this.background.fill('#5469ca');
+        this.background.stroke('#5469ca')
         this.view.interactive = true;
         this.view.onpointerenter = this.onpointerenter.bind(this)
         this.view.onpointerdown = this.onpointerdown.bind(this)
@@ -194,8 +196,11 @@ export class BaseNode {
         const rect = this.view.getBounds()
         this.content.x = this.padding
         this.content.y = this.padding
-        // this.content.width = rect.width - 2 * this.padding
         this.background.height = rect.height + 2 * this.padding
+    }
+
+    setNodeErr(){
+        this.background.fill('#ff4444');
     }
 
     addOutput(output: SocketObject) {
@@ -485,6 +490,9 @@ export class BaseNode {
         input.onChange.connect(() => {
             attr.value = input.value
         })
+        input.onEnter.connect(() => {
+            this.onAttibuteChange?.call(this, attr)
+        })
         return box
     }
 
@@ -553,6 +561,7 @@ export class BaseNode {
         }
         select.onSelect.connect((_: number, value: string) => {
             attr.value = value
+            this.onAttibuteChange?.call(this, attr)
         })
         return select
     }
@@ -562,7 +571,7 @@ export class BaseNode {
         if (!t) {
             return
         }
-        switch (t.type) {
+        switch (t.value) {
             case 'string':
                 val = '';
                 break

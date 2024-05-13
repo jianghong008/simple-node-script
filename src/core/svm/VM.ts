@@ -4,8 +4,12 @@ import { BuiltInFuntions } from "./vm-config";
 
 export class Svm {
     private stack = new Map<string, StackValue>()
+    private status: 'running' | 'stop' = 'stop'
     constructor() {
         this.registerFunctions()
+    }
+    get Status() {
+        return this.status
     }
     private registerFunctions() {
         for (const key in BuiltInFuntions) {
@@ -27,28 +31,48 @@ export class Svm {
         this.stack.set(key, val)
     }
     /**
-     * 执行节点
+     * execute nodes
      * @param nodes 
      */
-    execute(nodes: BaseNode[]) {
-        const tokens = SgToken.create(nodes)
-        this.evaluate(tokens)
-
+    async execute(nodes: BaseNode[]) {
+        this.status = 'running'
+        try {
+            const tokens = SgToken.create(nodes)
+            this.stack.clear()
+            this.registerFunctions()
+            await this.evaluate(tokens)
+            this.status = 'stop'
+        } catch (error) {
+            this.status = 'stop'
+            console.error(error)
+        }
     }
 
-    private evaluate(tokens: (StackValue | AstBlock | AstToken)[]) {
+    private async evaluate(tokens: (StackValue | AstBlock | AstToken)[]) {
+        if (this.status === 'stop') {
+            return
+        }
         for (const token of tokens) {
 
             if (token instanceof AstBlock) {
                 if (token.type === 'Function') {
-                    this.evaluate(token.body)
+                    await this.evaluate(token.body)
                 } else if (token.type === 'CallFunction' && token.funcName) {
 
                     const func = this.getVariable(token.funcName)
                     const args = token.args?.map(arg => this.getVariable(arg.name)?.value)
 
                     if (func) {
-                        const result = func.value(...(args ? args : []), token.id)
+                        if (func.value === undefined) {
+                            throw new Error(`${token.funcName}function not found`)
+                        }
+                        let result: any
+                        if (token.funType === 'async') {
+                            result = await func.value(...(args ? args : []), token.id)
+                        } else {
+                            result = func.value(...(args ? args : []), token.id)
+                        }
+
                         if (result !== undefined) {
                             // cache result
                             this.setVariable(token.id, result, '', 'temp')
@@ -56,18 +80,25 @@ export class Svm {
                             // no result
                         }
                     }
+                    // execute sub block
+                    await this.evaluate(token.body)
                 } else if (token.type === 'Logic') {
                     const condition = token.args?.map(arg => this.getVariable(arg.name)?.value)[0]
                     if (Boolean(condition) === true) {
-                        this.evaluate(token.body)
+                        await this.evaluate(token.body)
+                    }
+                } else if (token.type === 'Loop') {
+                    const condition = token.args?.map(arg => this.getVariable(arg.name)?.value)[0]
+                    while (Boolean(condition) === true && this.status === 'running') {
+                        await this.evaluate(token.body)
                     }
                 } else {
-                    this.evaluate(token.body)
+                    await this.evaluate(token.body)
                 }
 
-            }else if (token instanceof StackValue) {
+            } else if (token instanceof StackValue) {
                 this.registerVariable(token.id, token.type, token.value)
-            }else if (token instanceof AstToken) {
+            } else if (token instanceof AstToken) {
                 const left = this.getVariable(token.left.name)
                 const right = this.getVariable(token.right.name)
 
@@ -78,7 +109,7 @@ export class Svm {
                     }
                 } else {
                     const miss = left ? 'input2' : 'input1'
-                    throw new Error(`${miss} variable not found`)
+                    throw new Error(`${token.id}->${miss} variable not found`)
                 }
             }
 
@@ -103,11 +134,15 @@ export class Svm {
             val.value = value
             return
         }
-        // create new variable
+        // create variable
         const t = typeof value
         if (t === 'number' || t === 'string' || t === 'boolean') {
             this.registerVariable(key, t, value, scope, scopeType)
 
         }
+    }
+
+    stop() {
+        this.status = 'stop'
     }
 }

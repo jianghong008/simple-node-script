@@ -3,7 +3,6 @@ import * as PIXI from 'pixi.js';
 import * as UI from '@pixi/ui'
 export class PrintNode extends BuiltInFunc {
     private logBox: UI.ScrollBox
-    private top = 0
     private body: PIXI.Container
     constructor(name?: string) {
         super(name ? name : 'Print');
@@ -12,10 +11,11 @@ export class PrintNode extends BuiltInFunc {
         this.funcName = 'print';
         this.addInput({ key: 'input' })
         this.logBox = new UI.ScrollBox({
-            background: 0XFFFFFF,
+            background: 0X111122,
             width: this.width - this.customBox.x * 2 - this.padding * 2,
             height: 200,
-            elementsMargin:5,
+            elementsMargin: 5,
+            globalScroll: false
         })
 
         this.createBtn()
@@ -43,18 +43,22 @@ export class PrintNode extends BuiltInFunc {
         this.logBox.removeItems()
     }
     print(msg: any) {
-        const text = new PIXI.Text({
+        const box = new PIXI.Container()
+        const g = new PIXI.Graphics()
+        g.rect(0, 0, this.logBox.width, 20)
+        g.fill(0x221133)
+        box.addChild(g)
+        box.addChild(new PIXI.Text({
             text: String(msg),
             style: {
-                fontSize: 16,
-                fill: 0x000000,
+                fontSize: 12,
+                fill: 0xffffff,
                 wordWrap: true,
                 wordWrapWidth: this.logBox.width,
                 breakWords: true
             }
-        })
-        
-        this.logBox.addItem(text)
-        this.rerender()
+        }))
+
+        this.logBox.addItem(box)
     }
 }

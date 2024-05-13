@@ -4,6 +4,6 @@ export const TopMenus = {
         'Logic','Loop','Invert','Referencing',
         'BinaryOperator','Variable',
         'Print','Length','Random',
-        'Round',
+        'Round','Sleep',
     ]
 }
