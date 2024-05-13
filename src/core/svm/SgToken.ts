@@ -125,6 +125,25 @@ export class SgToken {
         return tokens
     }
 
+    static variableToType(value: any, t: VariableType) {
+        let val: any = undefined
+        switch (t) {
+            case 'string':
+                val = String(value)
+                break
+            case 'number':
+                val = Number(value)
+                break
+            case 'boolean':
+                val = Boolean(value)
+                break
+            case 'array':
+                val = String(value).split(',')
+        }
+
+        return val
+    }
+
     private static parse(node: BaseNode, path: string = '') {
         let block: StackValue | AstToken | AstBlock | undefined
         if (node.type === 'Logic') {
@@ -169,8 +188,9 @@ export class SgToken {
             if (!t) {
                 throw new VmErr(node.id, `${node.titleContent} type not found`)
             }
-
-            block = new StackValue(node.id, t, varNode.getDefaultValue(), path)
+            const val = varNode.getAttribute('value')?.value
+            const defaultValue = val ? val : varNode.getDefaultValue()
+            block = new StackValue(node.id, t, SgToken.variableToType(defaultValue, t), path)
         }
 
         if (node.type === 'BinaryOperator') {

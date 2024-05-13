@@ -1,4 +1,4 @@
-type VariableType = 'string' | 'number' | 'boolean' | 'array' | 'function'
+type VariableType = 'string' | 'number' | 'boolean' | 'array' | 'function' | 'object'
 
 type OperatorType = '+' | '-' | '*' | '/' | '%' | '^' | '&' | '|' | '&&' | '||' | '<' | '>' | '==' | '!' | '~' | '!=' | '<=' | '>='
 type AstTokenType = 'BinaryExpression' | 'Literal' | 'Identifier' | 'UnaryExpression' | 'MemberExpression' | 'CallExpression'

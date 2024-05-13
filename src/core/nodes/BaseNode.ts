@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js';
 import { EventType, GEvent } from '../utils/GEvent';
 import { NodeSocket } from './NodeSocket';
-import { Select } from '@pixi/ui';
+import { Input, Select } from '@pixi/ui';
 import { DataBus } from '../utils/DataBus';
 
 export class BaseNode {
@@ -415,10 +415,41 @@ export class BaseNode {
             if (attribute.options) {
                 const select = this.createAttrSelect(text.x + 60, text.y, attribute)
                 this.attributesBox.addChild(select);
-
+            }else{
+                const input = this.createInputElement(text.x + 60, text.y, attribute)
+                this.attributesBox.addChild(input);
             }
 
         }
+    }
+
+    private createInputElement(x: number, y: number, attr: NodeAttribute) {
+        const box = new PIXI.Container({x,y})
+        const bg = new PIXI.Graphics()
+        const w = 80
+        const h = 20
+        bg.roundRect(0, 0, w, h, 5)
+        bg.fill(0x3f51b5)
+        const input = new Input({
+            bg,
+            value: attr.value,
+            textStyle:{
+                fontSize: 16,
+                fill: 0xffffff,
+                align:'center',
+            },
+            align:'center'
+        });
+        input.width = w
+        const mask = new PIXI.Graphics()
+        mask.roundRect(0, 0, w, h, 5)
+        mask.fill(0x3f51b5)
+        input.mask = mask
+        box.addChild(mask,input)
+        input.onChange.connect(() => {
+            attr.value = input.value
+        })
+        return box
     }
 
     private createAttrSelect(x: number, y: number, attr: NodeAttribute) {
@@ -431,7 +462,7 @@ export class BaseNode {
         openBG.rect(0, 0, w, h * (attr.options || []).length)
         openBG.fill(0x3f51b5)
         // options
-        const defaultIndex = attr.options?.indexOf(attr.value)
+        const defaultIndex = attr.options?.indexOf(attr.type)
         const select = new Select({
             closedBG,
             openBG,
