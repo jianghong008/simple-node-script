@@ -496,7 +496,7 @@ export class BaseNode {
         openBG.rect(0, 0, w, h * (attr.options || []).length)
         openBG.fill(0x3f51b5)
         // options
-        const defaultIndex = attr.options?.indexOf(attr.type)
+        const defaultIndex = attr.options?.indexOf(attr.value)
         const select = new Select({
             closedBG,
             openBG,
@@ -550,7 +550,7 @@ export class BaseNode {
             select.close()
         }
         select.onSelect.connect((_: number, value: string) => {
-            this.setAttribute(attr, value)
+            attr.value = value
         })
         return select
     }
@@ -575,9 +575,5 @@ export class BaseNode {
                 break
         }
         return val
-    }
-    private setAttribute(attr: NodeAttribute, value: any) {
-        attr.type = value
-        attr.value = this.getDefaultValue()
     }
 }

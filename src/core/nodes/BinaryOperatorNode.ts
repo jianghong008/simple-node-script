@@ -11,7 +11,7 @@ export class BinaryOperatorNode extends BaseNode {
         this.addAttribute({
             name: "type",
             value: "+",
-            type: 'array',
+            type: 'string',
             options: ['+', '-', '*', '/']
         })
         this.refresh()

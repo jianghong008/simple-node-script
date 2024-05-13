@@ -5,6 +5,7 @@ export class VariableNode extends BaseNode {
         super(name ? name : 'Variable')
         this.edit.out = false
         this.type = 'Variable'
+        this.addInput({ key: 'line' })
         this.addInput({ key: 'input' })
         this.addOutput({ key: 'output' })
 

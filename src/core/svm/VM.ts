@@ -45,11 +45,11 @@ export class Svm {
                         this.evaluate(token.body)
                     } else if (token.type === 'CallFunction' && token.funcName) {
 
-                        const func = this.stack.get(token.funcName)
+                        const func = this.getVariable(token.funcName)
                         const args = token.args?.map(arg => this.getVariable(arg.name)?.value)
 
                         if (func) {
-                            const result = func.value(...(args ? args : []),token.id)
+                            const result = func.value(...(args ? args : []), token.id)
                             if (result !== undefined) {
                                 // cache result
                                 this.setVariable(token.id, result, '', 'temp')
@@ -63,14 +63,17 @@ export class Svm {
                 this.registerVariable(token.id, token.type, token.value)
             }
             if (token instanceof AstToken) {
-                const left = this.stack.get(token.left.name)
-                const right = this.stack.get(token.right.name)
+                const left = this.getVariable(token.left.name)
+                const right = this.getVariable(token.right.name)
 
                 if (left && right) {
                     const result = token.operate(left, right)
-                    if (token.saveValue) {
-                        this.setVariable(token.saveValue.name, result)
+                    if (result != undefined) {
+                        this.setVariable(token.id, result, '', 'temp')
                     }
+                } else {
+                    const miss = left ? 'input2' : 'input1'
+                    throw new Error(`${miss} variable not found`)
                 }
             }
 
@@ -83,6 +86,9 @@ export class Svm {
         const variable = this.stack.get(key)
         if (variable !== undefined && variable.scopeType === 'temp') {
             this.removeVariable(key)
+        }
+        if (variable !== undefined && variable.type === 'referencing') {
+            return this.stack.get(variable.value)
         }
         return variable
     }
