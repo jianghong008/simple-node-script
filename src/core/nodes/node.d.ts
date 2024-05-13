@@ -13,4 +13,5 @@ interface NodeAttribute {
     value: string
     type: VariableType
     options?: string[]
+    disable?: boolean
 }

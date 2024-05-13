@@ -9,11 +9,13 @@ export class StackValue {
     value: any
     id: string
     scope: string
-    constructor(id: string, type: VariableType, value: any, scope: string) {
+    scopeType: VariableScopeType = 'global'
+    constructor(id: string, type: VariableType, value: any, scope: string, scopeType: VariableScopeType = 'global') {
         this.type = type
         this.value = value
         this.id = id
         this.scope = scope
+        this.scopeType = scopeType
     }
 }
 
@@ -81,14 +83,12 @@ export class AstBlock {
     body: AstToken[]
     funcName?: string
     args?: ReferencingValue[]
-    saveValue?: ReferencingValue
-    constructor(id: string, type: AstBlockType, body: AstToken[], funcName?: string, args?: ReferencingValue[], saveValue?: ReferencingValue) {
+    constructor(id: string, type: AstBlockType, body: AstToken[], funcName?: string, args?: ReferencingValue[]) {
         this.id = id
         this.type = type
         this.body = body
         this.funcName = funcName
         this.args = args
-        this.saveValue = saveValue
     }
 }
 
@@ -171,15 +171,12 @@ export class SgToken {
                 })
 
             }
-            const output = callFunc.outputs[0]?.socket.connection?.node
-            let outputVar: ReferencingValue | undefined
-            if (output) {
-                outputVar = {
-                    type: 'Variable',
-                    name: output
-                }
-            }
-            block = new AstBlock(callFunc.id, 'CallFunction', [], callFunc.funcName, args, outputVar)
+            
+            block = new AstBlock(callFunc.id, 'CallFunction', [], callFunc.funcName, args)
+        }
+
+        if (node.type === 'Referencing') {
+            block = new AstBlock(node.id, 'Function', [])
         }
 
         if (node.type === 'Variable') {

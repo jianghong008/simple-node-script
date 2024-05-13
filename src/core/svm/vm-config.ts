@@ -1,7 +1,15 @@
+import { PrintNode } from "../nodes/PrintNode"
+import { DataBus } from "../utils/DataBus"
 
 export const BuiltInFuntions = {
-    print: (data: any) => {
-        console.log(data)
+    print: (data: any,id?:string) => {
+        if(id){
+            const printNode = DataBus.nodes.find(node => node.id === id)
+            if(printNode){
+                (printNode as PrintNode).print(data)
+            }
+        }
+        console.log(`${id}: `,data)
     },
     abs: (data: number) => {
         return Math.abs(data)

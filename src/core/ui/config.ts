@@ -1,8 +1,9 @@
 
 export const TopMenus = {
     add:[
-        'Logic','Loop','Invert',
+        'Logic','Loop','Invert','Referencing',
         'BinaryOperator','Variable',
         'Print','Length','Random',
+        'Round',
     ]
 }

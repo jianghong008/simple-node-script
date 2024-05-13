@@ -19,11 +19,11 @@ export class Svm {
         const value = new StackValue(key, 'function', func, '')
         this.stack.set(key, value)
     }
-    registerVariable(key: string, type: VariableType, value: any) {
-        if (this.getVariable(key) !== undefined){
+    registerVariable(key: string, type: VariableType, value: any, scope = '', scopeType: VariableScopeType = 'global') {
+        if (this.getVariable(key) !== undefined) {
             return
         }
-        const val = new StackValue(key, type, value, '')
+        const val = new StackValue(key, type, value, scope, scopeType)
         this.stack.set(key, val)
     }
     /**
@@ -47,13 +47,14 @@ export class Svm {
 
                         const func = this.stack.get(token.funcName)
                         const args = token.args?.map(arg => this.getVariable(arg.name)?.value)
-                        const saveValue = token.saveValue
+
                         if (func) {
-                            const result = func.value(...args ? args : [])
-                            if (saveValue) {
-                                this.setVariable(saveValue.name, result)
+                            const result = func.value(...(args ? args : []),token.id)
+                            if (result !== undefined) {
+                                // cache result
+                                this.setVariable(token.id, result, '', 'temp')
                             } else {
-                                //console.warn('no save value')
+                                // no result
                             }
                         }
                     }
@@ -75,20 +76,26 @@ export class Svm {
 
         }
     }
-    getVariable(key: string) {
-        return this.stack.get(key)
+    removeVariable(key: string) {
+        this.stack.delete(key)
     }
-    setVariable(key: string, value: any) {
+    getVariable(key: string) {
+        const variable = this.stack.get(key)
+        if (variable !== undefined && variable.scopeType === 'temp') {
+            this.removeVariable(key)
+        }
+        return variable
+    }
+    setVariable(key: string, value: any, scope = '', scopeType: VariableScopeType = 'global') {
         const val = this.getVariable(key)
         if (val !== undefined) {
             val.value = value
             return
         }
         // create new variable
-
         const t = typeof value
         if (t === 'number' || t === 'string' || t === 'boolean') {
-            this.registerVariable(key, t, value)
+            this.registerVariable(key, t, value, scope, scopeType)
 
         }
     }

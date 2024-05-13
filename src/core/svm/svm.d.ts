@@ -9,3 +9,5 @@ interface ReferencingValue {
 }
 
 type AstBlockType = 'Logic' | 'Loop' | 'Function' | 'CallFunction'
+
+type VariableScopeType = 'global' | 'local' | 'temp' | 'constant'

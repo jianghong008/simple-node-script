@@ -111,9 +111,12 @@ export class NodeSocket {
             socket: this.key
         }
         this.parent.updateSocket(this)
+
+        this.parent.onConnect?.call(this,this,socket)
+        socket.parent.onConnect?.call(this,this,socket)
     }
 
-    private disconnect() {
+    public disconnect() {
         const node = DataBus.nodes.find(node => node.id === this.connection?.node)
         if (!node) {
             return
@@ -151,6 +154,8 @@ export class NodeSocket {
             socket: this.key
         }
         socket.isBussing = true
+
+        this.parent.onConnect?.call(this,this,socket)
     }
 
     chechConnection() {

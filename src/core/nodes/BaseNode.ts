@@ -10,10 +10,11 @@ export class BaseNode {
     public view: PIXI.Container
     public width = 180
     public background: PIXI.Graphics
-    private content: PIXI.Container
-    private outputBox: PIXI.Container
-    private inputsBox: PIXI.Container
-    private attributesBox: PIXI.Container
+    protected content: PIXI.Container
+    protected outputBox: PIXI.Container
+    protected inputsBox: PIXI.Container
+    protected attributesBox: PIXI.Container
+    protected customBox: PIXI.Container
     public boxRadius = 2
     public outputName = 'output'
     public type = 'node'
@@ -32,6 +33,7 @@ export class BaseNode {
     private _inputs: SocketObject[] = []
     private _attributes: NodeAttribute[] = []
     public titleContent = ''
+    public onConnect?: (from: NodeSocket, to: NodeSocket) => void
     constructor(title = 'node') {
         this.className = this.constructor.name.replace('Node', '')
         this.titleContent = title
@@ -54,22 +56,23 @@ export class BaseNode {
         });
         this.content.addChild(this.title);
 
-        this.attributesBox = new PIXI.Container({ x: 10, y: this.padding + 18 });
+        this.attributesBox = new PIXI.Container({ x: this.padding, y: this.padding + 18 });
         this.content.addChild(this.attributesBox);
 
         this.outputBox = new PIXI.Container({ x: this.width / 2 - this.padding, y: this.padding });
         this.outputBox.width = this.width / 2
         this.content.addChild(this.outputBox);
-        this.inputsBox = new PIXI.Container({ x: 10, y: this.padding });
+        this.inputsBox = new PIXI.Container({ x: this.padding, y: this.padding });
         this.inputsBox.width = this.width / 2
         this.content.addChild(this.inputsBox);
-
+        this.customBox = new PIXI.Container({ x: this.padding, y: this.padding });
+        this.content.addChild(this.customBox);
         this.createView();
         this.rerender()
     }
     private createID() {
         const date = (Date.now() + Math.floor(Math.random() * 10000)).toString(16)
-        const id = `node_${this.titleContent}_${date}`
+        const id = `${this.titleContent}_${date}`
         this.id = id
     }
     getAttribute(key: string) {
@@ -186,7 +189,7 @@ export class BaseNode {
         }
     }
 
-    private rerender() {
+    protected rerender() {
         this.background.height = 0
         const rect = this.view.getBounds()
         this.content.x = this.padding
@@ -196,18 +199,22 @@ export class BaseNode {
     }
 
     addOutput(output: SocketObject) {
-        if(this._outputs.find(item => item.key === output.key)) {
-            return
+        const oldIndex = this._outputs.findIndex(item => item.key === output.key)
+        if (oldIndex > -1) {
+            this._outputs[oldIndex] = output
+        } else {
+            this._outputs.push(output)
         }
-        this._outputs.push(output)
         this.createOutputs()
     }
 
     addInput(input: SocketObject) {
-        if(this._inputs.find(item => item.key === input.key)) {
-            return
+        const oldIndex = this._inputs.findIndex(item => item.key === input.key)
+        if (oldIndex > -1) {
+            this._inputs[oldIndex] = input
+        } else {
+            this._inputs.push(input)
         }
-        this._inputs.push(input)
         this.createInputs()
     }
 
@@ -221,7 +228,7 @@ export class BaseNode {
 
     }
 
-    private createInputs() {
+    protected createInputs() {
         this.inputsBox.removeChildren();
         const top = this.attributesBox.getBounds().height + this.attributesBox.y + this.padding / 2
         for (let i = 0; i < this._inputs.length; i++) {
@@ -268,7 +275,7 @@ export class BaseNode {
         this.rerender()
     }
 
-    private createOutputs() {
+    protected createOutputs() {
         const top = this.attributesBox.getBounds().height + this.attributesBox.y + this.padding / 2
         this.outputBox.removeChildren();
         const x = this.width / 2 - this.padding / 2
@@ -385,15 +392,17 @@ export class BaseNode {
     }
 
     addAttribute(attr: NodeAttribute) {
-        if(this._attributes.find(item => item.name === attr.name)) {
-            return
+        const oldIndex = this._attributes.findIndex(item => item.name === attr.name)
+        if (oldIndex > -1) {
+            this._attributes[oldIndex] = attr
+        } else {
+            this._attributes.push(attr)
         }
-        this._attributes.push(attr)
+
         this.createAttributes()
-        this.rerender()
     }
 
-    private createAttributes() {
+    protected createAttributes() {
         this.attributesBox.removeChildren();
 
         for (let i = 0; i < this._attributes.length; i++) {
@@ -412,19 +421,44 @@ export class BaseNode {
             text.y = this.padding + 20 * i * 1.5
             this.attributesBox.addChild(text);
 
-            if (attribute.options) {
-                const select = this.createAttrSelect(text.x + 60, text.y, attribute)
-                this.attributesBox.addChild(select);
-            }else{
-                const input = this.createInputElement(text.x + 60, text.y, attribute)
-                this.attributesBox.addChild(input);
+            if (attribute.disable !== true) {
+                if (attribute.options) {
+                    const select = this.createAttrSelect(text.x + 60, text.y, attribute)
+                    this.attributesBox.addChild(select);
+                } else {
+                    const input = this.createInputElement(text.x + 60, text.y, attribute)
+                    this.attributesBox.addChild(input);
+                }
+            } else {
+                const valText = this.createValueText(text.x + 60, text.y, attribute)
+                this.attributesBox.addChild(valText);
             }
 
         }
+
+        this.rerender()
+    }
+
+    private createValueText(x: number, y: number, attr: NodeAttribute) {
+        const valText = new PIXI.Text({
+            text: attr.value,
+            style: {
+                fontSize: 14,
+                fill: 0xff9999,
+                wordWrap: true,
+                wordWrapWidth: 80,
+                breakWords: true,
+                trim: true,
+                align: 'center'
+            }
+        })
+        valText.y = y
+        valText.x = x
+        return valText
     }
 
     private createInputElement(x: number, y: number, attr: NodeAttribute) {
-        const box = new PIXI.Container({x,y})
+        const box = new PIXI.Container({ x, y })
         const bg = new PIXI.Graphics()
         const w = 80
         const h = 20
@@ -433,19 +467,19 @@ export class BaseNode {
         const input = new Input({
             bg,
             value: attr.value,
-            textStyle:{
+            textStyle: {
                 fontSize: 16,
                 fill: 0xffffff,
-                align:'center',
+                align: 'center',
             },
-            align:'center'
+            align: 'center'
         });
         input.width = w
         const mask = new PIXI.Graphics()
         mask.roundRect(0, 0, w, h, 5)
         mask.fill(0x3f51b5)
         input.mask = mask
-        box.addChild(mask,input)
+        box.addChild(mask, input)
         input.onChange.connect(() => {
             attr.value = input.value
         })
