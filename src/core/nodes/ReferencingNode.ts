@@ -9,6 +9,7 @@ export class ReferencingNode extends BaseNode {
         this.addInput({ key: 'line' })
         this.addInput({ key: 'input' })
         this.addOutput({ key: 'output' })
+
         this.addAttribute({
             name: "value",
             value: val ? val : 'none',
@@ -21,6 +22,9 @@ export class ReferencingNode extends BaseNode {
 
         this.view
     }
+    addAttribute(attr: NodeAttribute) {
+        super.addAttribute(attr)
+    }
     private onSocketConnect(from: NodeSocket, to: NodeSocket) {
         if (to.parent.id != this.id || to.key != 'input') {
             return
@@ -29,7 +33,6 @@ export class ReferencingNode extends BaseNode {
         if (!attr) {
             return
         }
-        
         from.disconnect()
         attr.value = from.parent.id
         this.createAttributes()

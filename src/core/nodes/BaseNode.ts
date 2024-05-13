@@ -440,16 +440,18 @@ export class BaseNode {
     }
 
     private createValueText(x: number, y: number, attr: NodeAttribute) {
+        const temp = attr.value.split('_').slice(0, 2)
         const valText = new PIXI.Text({
-            text: attr.value,
+            text: temp.join('_'),
             style: {
-                fontSize: 14,
-                fill: 0xff9999,
+                fontSize: 15,
+                fill: 0xffdd00,
                 wordWrap: true,
                 wordWrapWidth: 80,
                 breakWords: true,
                 trim: true,
-                align: 'center'
+                align: 'center',
+                fontWeight: 'bold'
             }
         })
         valText.y = y

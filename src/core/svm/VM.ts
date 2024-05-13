@@ -40,29 +40,34 @@ export class Svm {
         for (const token of tokens) {
 
             if (token instanceof AstBlock) {
-                if (token)
-                    if (token.type === 'Function') {
-                        this.evaluate(token.body)
-                    } else if (token.type === 'CallFunction' && token.funcName) {
+                if (token.type === 'Function') {
+                    this.evaluate(token.body)
+                } else if (token.type === 'CallFunction' && token.funcName) {
 
-                        const func = this.getVariable(token.funcName)
-                        const args = token.args?.map(arg => this.getVariable(arg.name)?.value)
+                    const func = this.getVariable(token.funcName)
+                    const args = token.args?.map(arg => this.getVariable(arg.name)?.value)
 
-                        if (func) {
-                            const result = func.value(...(args ? args : []), token.id)
-                            if (result !== undefined) {
-                                // cache result
-                                this.setVariable(token.id, result, '', 'temp')
-                            } else {
-                                // no result
-                            }
+                    if (func) {
+                        const result = func.value(...(args ? args : []), token.id)
+                        if (result !== undefined) {
+                            // cache result
+                            this.setVariable(token.id, result, '', 'temp')
+                        } else {
+                            // no result
                         }
                     }
-            }
-            if (token instanceof StackValue) {
+                } else if (token.type === 'Logic') {
+                    const condition = token.args?.map(arg => this.getVariable(arg.name)?.value)[0]
+                    if (Boolean(condition) === true) {
+                        this.evaluate(token.body)
+                    }
+                } else {
+                    this.evaluate(token.body)
+                }
+
+            }else if (token instanceof StackValue) {
                 this.registerVariable(token.id, token.type, token.value)
-            }
-            if (token instanceof AstToken) {
+            }else if (token instanceof AstToken) {
                 const left = this.getVariable(token.left.name)
                 const right = this.getVariable(token.right.name)
 

@@ -83,7 +83,7 @@ export class AstToken {
 export class AstBlock {
     id: string
     type: AstBlockType
-    body: AstToken[]
+    body: (StackValue | AstToken | AstBlock)[]
     funcName?: string
     args?: ReferencingValue[]
     constructor(id: string, type: AstBlockType, body: AstToken[], funcName?: string, args?: ReferencingValue[]) {
@@ -107,7 +107,7 @@ export class SgToken {
         SgToken.decode(main, '', tokens)
         return tokens
     }
-    static decode(node: BaseNode, path = '', tokens: any[] = []) {
+    static decode(node: BaseNode, path = '', tokens: any[] = [], father?: (StackValue | AstToken | AstBlock)) {
         path = path + '/' + node.id
         const token = SgToken.parse(node, path)
         if (!token && node.type !== 'main') {
@@ -115,14 +115,20 @@ export class SgToken {
         }
         const hasToken = tokens.find(token => token.id === node.id)
         if (token && !hasToken && node.type !== 'main') {
-            tokens.push(token)
+            if (father !== undefined && father instanceof AstBlock) {
+                father.body.push(token)
+            } else {
+                tokens.push(token)
+            }
+
         }
+        father = token
         for (const output of node.outputs) {
             const childNode = SgToken.findNode(output.parms?.node)
             if (!childNode) {
                 continue
             }
-            SgToken.decode(childNode, path, tokens)
+            SgToken.decode(childNode, path, tokens, father)
         }
 
         return tokens
@@ -154,13 +160,37 @@ export class SgToken {
     private static parse(node: BaseNode, path: string = '') {
         let block: StackValue | AstToken | AstBlock | undefined
         if (node.type === 'Logic') {
-            block = new AstBlock(node.id, 'Logic', [])
+            const condition = node.inputs[0]?.socket?.connection
+            if (condition === undefined) {
+                throw new VmErr(node.id, 'Logic node condition not found')
+            }
+            const referencing: ReferencingValue = {
+                name: condition.node,
+                type: 'Variable'
+            }
+            block = new AstBlock(node.id, 'Logic', [], '', [referencing])
         }
         if (node.type === 'Loop') {
-            block = new AstBlock(node.id, 'Loop', [])
+            const condition = node.inputs[0]?.socket?.connection
+            if (condition === undefined) {
+                throw new VmErr(node.id, 'Loop node condition not found')
+            }
+            const referencing: ReferencingValue = {
+                name: condition.node,
+                type: 'Variable'
+            }
+            block = new AstBlock(node.id, 'Loop', [], '', [referencing])
         }
         if (node.type === 'Function') {
-            block = new AstBlock(node.id, 'Function', [])
+            const condition = node.inputs[0]?.socket?.connection
+            if (condition === undefined) {
+                throw new VmErr(node.id, 'Function node condition not found')
+            }
+            const referencing: ReferencingValue = {
+                name: condition.node,
+                type: 'Variable'
+            }
+            block = new AstBlock(node.id, 'Function', [], '', [referencing])
         }
 
         if (node.type === 'CallFunction') {

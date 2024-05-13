@@ -19,9 +19,8 @@ export class PrintNode extends BuiltInFunc {
         })
 
         this.createBtn()
-        this.logBox.y = 30
+        this.logBox.y = 60
         this.body.addChild(this.logBox)
-        this.print('logs')
         this.refresh()
     }
     private createBtn() {
@@ -29,7 +28,8 @@ export class PrintNode extends BuiltInFunc {
             text: 'clear',
             style: {
                 fontSize: 16,
-                fill: 0xff8899
+                fill: 0xffdd99,
+                fontWeight: 'bold'
             }
         }))
         const rect = btn.view.getBounds()
@@ -55,11 +55,6 @@ export class PrintNode extends BuiltInFunc {
         })
         
         this.logBox.addItem(text)
-        if (this.top == 0) {
-            const rect = this.inputsBox.getBounds()
-            this.top = rect.height + rect.y
-        }
-        this.body.y = this.top
         this.rerender()
     }
 }
