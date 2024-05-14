@@ -8,6 +8,6 @@ interface ReferencingValue {
     name: string
 }
 
-type AstBlockType = 'Logic' | 'Loop' | 'Function' | 'CallFunction'
+type AstBlockType = 'Logic' | 'Loop' | 'Function' | 'CallFunction' | 'SetVariable'
 
 type VariableScopeType = 'global' | 'local' | 'temp' | 'constant'

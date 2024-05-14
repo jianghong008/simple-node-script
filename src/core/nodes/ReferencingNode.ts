@@ -7,11 +7,12 @@ export class ReferencingNode extends BaseNode {
         this.edit.out = false
         this.type = 'Referencing'
         this.addInput({ key: 'line' })
+        this.addInput({ key: 'connect' })
         this.addInput({ key: 'input' })
         this.addOutput({ key: 'output' })
-
+        
         this.addAttribute({
-            name: "value",
+            name: "reference",
             value: val ? val : 'none',
             type: 'string',
             options: undefined,
@@ -26,10 +27,10 @@ export class ReferencingNode extends BaseNode {
         super.addAttribute(attr)
     }
     private onSocketConnect(from: NodeSocket, to: NodeSocket) {
-        if (to.parent.id != this.id || to.key != 'input') {
+        if (to.parent.id != this.id || to.key != 'connect') {
             return
         }
-        const attr = this.getAttribute('value')
+        const attr = this.getAttribute('reference')
         if (!attr) {
             return
         }

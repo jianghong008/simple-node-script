@@ -12,8 +12,16 @@ export class BinaryOperatorNode extends BaseNode {
             name: "type",
             value: "+",
             type: 'string',
-            options: ['+', '-', '*', '/']
+            options: ['+', '-', '*', '/', '%', '>', '<', '>=', '<=', '==', '!=', '&&', '||']
         })
         this.refresh()
+    }
+
+    getOperatorType() {
+        const t = this.getAttribute('type')
+        if (t) {
+            return t.value
+        }
+        return '+'
     }
 }

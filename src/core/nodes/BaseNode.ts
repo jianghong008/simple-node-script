@@ -81,6 +81,12 @@ export class BaseNode {
     getAttribute(key: string) {
         return this._attributes.find(attr => attr.name === key)
     }
+    getInput(key: string) {
+        return this._inputs.find(input => input.key === key)
+    }
+    getOutput(key: string) {
+        return this._outputs.find(output => output.key === key)
+    }
     get outputs() {
         return this._outputs
     }

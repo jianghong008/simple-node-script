@@ -154,8 +154,6 @@ export class NodeSocket {
             socket: this.key
         }
         socket.isBussing = true
-
-        this.parent.onConnect?.call(this,this,socket)
     }
 
     chechConnection() {

@@ -11,7 +11,7 @@ export class VariableNode extends BaseNode {
 
         this.addAttribute({
             name: "type",
-            value: '0',
+            value: 'number',
             type: 'number',
             options: ['number', 'string', 'boolean', 'array']
         })
@@ -39,6 +39,14 @@ export class VariableNode extends BaseNode {
             }
         }
         this.createAttributes()
+    }
+
+    getVariableType() {
+        const t = this.getAttribute('type')
+        if (t) {
+            return t.value
+        }
+        return 'number'
     }
 
     private variableToType(value: any, t: VariableType) {

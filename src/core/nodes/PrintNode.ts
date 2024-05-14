@@ -61,5 +61,6 @@ export class PrintNode extends BuiltInFunc {
         }))
 
         this.logBox.addItem(box)
+        this.logBox.scrollTo(this.logBox.items.length - 1)
     }
 }

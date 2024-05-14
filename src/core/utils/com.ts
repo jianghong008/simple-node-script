@@ -11,7 +11,7 @@ export class ComUtils {
         return `${year}-${month}-${day} ${hour}:${minute}:${second}`
     }
 
-    static download(content: string) {
+    static webDownload(content: string) {
         const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
@@ -20,5 +20,28 @@ export class ComUtils {
         a.download = 'sgs.json'
         a.click()
         document.body.removeChild(a)
+    }
+
+    static webOpenFile(): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const input = document.createElement('input')
+            input.type = 'file'
+            input.accept = '.json'
+            input.style.display = 'none'
+            document.body.appendChild(input)
+            input.onchange = () => {
+                const file = input.files?.[0]
+                if (!file) {
+                    reject()
+                    return
+                }
+                const reader = new FileReader()
+                reader.onload = () => {
+                    resolve(reader.result as string)
+                }
+                reader.readAsText(file)
+            }
+            input.click()
+        })
     }
 }

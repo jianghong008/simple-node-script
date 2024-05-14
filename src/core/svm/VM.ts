@@ -108,13 +108,23 @@ export class Svm {
                         await this.evaluate(token.body)
                     }
                 } else if (token.type === 'Loop') {
-                    const condition = token.args?.map(arg => this.getVariable(arg.name)?.value)[0]
+                    let condition = token.args?.map(arg => this.getVariable(arg.name)?.value)[0]
                     while (Boolean(condition) === true) {
                         if (this.status !== 'running') {
                             throw new Error(`svm stoped`)
                         }
                         await this.evaluate(token.body)
+                        condition = token.args?.map(arg => this.getVariable(arg.name)?.value)[0]
                     }
+                } else if (token.type === 'SetVariable') {
+                    if (token.args?.length != 2) {
+                        throw new Error(`set variable args error`)
+                    }
+                    const inputTemp = this.getVariable(token.args[1].name)
+                    if (inputTemp) {
+                        this.updateVariable(token.args[0].name, inputTemp.value)
+                    }
+                    await this.evaluate(token.body)
                 } else {
                     await this.evaluate(token.body)
                 }
@@ -124,7 +134,6 @@ export class Svm {
             } else if (token instanceof AstToken) {
                 const left = this.getVariable(token.left.name)
                 const right = this.getVariable(token.right.name)
-
                 if (left && right) {
                     const result = token.operate(left, right)
                     if (result != undefined) {
@@ -141,14 +150,14 @@ export class Svm {
     removeVariable(key: string) {
         this.stack.delete(key)
     }
-    getVariable(key: string, clear = true) {
+    getVariable(key: string, clear = true): any {
         // local stack
         const variable = this.stack.get(key)
         if (variable !== undefined && variable.scopeType === 'temp' && clear) {
             this.removeVariable(key)
         }
         if (variable !== undefined && variable.type === 'referencing') {
-            return this.stack.get(variable.value)
+            return this.getVariable(variable.value, clear)
         }
         // lib stack
         if (variable === undefined) {
@@ -171,6 +180,14 @@ export class Svm {
         if (t === 'number' || t === 'string' || t === 'boolean') {
             this.registerVariable(key, t, value, scope, scopeType)
 
+        }
+    }
+
+    updateVariable(key: string, value: any) {
+        const val = this.stack.get(key)
+        if (val !== undefined) {
+            val.value = value
+            return
         }
     }
 

@@ -38,7 +38,7 @@ export class MainUi {
         this.svm = new Svm()
     }
     private async init() {
-        this.registerConsole()
+        // this.registerConsole()
         await this.preload()
         this.createTopActions()
         this.createBottomActions()
@@ -72,6 +72,7 @@ export class MainUi {
             }
         }))
         this.logBox.addItem(box)
+        this.logBox.scrollTo(this.logBox.items.length - 1)
     }
     private async preload() {
         await PIXI.Assets.load('/ui/open.svg')
@@ -234,7 +235,7 @@ export class MainUi {
             y: DataBus.nodesBox.y,
             scale: DataBus.nodesBox.scale.x
         }, DataBus.nodes)
-        ComUtils.download(json)
+        ComUtils.webDownload(json)
     }
     private runScript() {
         if (this.svm.Status === 'running') {
@@ -264,9 +265,9 @@ export class MainUi {
         }
     }
     private async loadScript() {
-        const data = await import('../../../data/sgs.json')
+        const data = await ComUtils.webOpenFile()
         DataBus.nodesBox.removeChildren()
-        const script = await SgScript.decode(data.default as any)
+        const script = await SgScript.decode(data)
         DataBus.nodes = script.nodes
         DataBus.nodesBox.x = script.data.stage.x
         DataBus.nodesBox.y = script.data.stage.y

@@ -28,7 +28,7 @@ export class SgScript {
             }
 
         } catch (error) {
-            console.error(error)
+            console.error(Error(`SgScript decode error: ${error}`))
         }
         return script
     }
