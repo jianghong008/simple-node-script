@@ -41,6 +41,7 @@ export class PrintNode extends BuiltInFunc {
     }
     clear() {
         this.logBox.removeItems()
+        this.logBox.scrollTo(0)
     }
     print(msg: any) {
         const box = new PIXI.Container()

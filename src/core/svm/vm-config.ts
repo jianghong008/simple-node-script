@@ -34,5 +34,23 @@ export const BuiltInFuntions = {
         return new Promise(resolve => {
             setTimeout(resolve, data)
         })
+    },
+    invert: (data: any) => {
+        return !Boolean(data)
+    },
+    length(data: any) {
+        if (typeof data === 'string') {
+            return data.length
+        } else if (typeof data === 'object' && data.length) {
+            return data.length
+        } else {
+            return 0
+        }
+    },
+    getAttr(obj: any, attr: string) {
+        if (obj === undefined || obj === null) {
+            return undefined
+        }
+        return obj[attr]
     }
 }

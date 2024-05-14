@@ -2,11 +2,31 @@ import { BaseNode } from "../nodes/BaseNode";
 import { AstBlock, AstToken, SgToken, StackValue } from "./SgToken";
 import { BuiltInFuntions } from "./vm-config";
 
+export class SvmLib {
+    protected svm: Svm
+    protected _stack: Map<string, StackValue>
+    public name: string = 'lib'
+    constructor(svm: Svm) {
+        this._stack = new Map()
+        this.svm = svm
+    }
+    static init(svm: Svm) {
+        return new SvmLib(svm)
+    }
+    get stack() {
+        return this._stack
+    }
+}
+
 export class Svm {
     private stack = new Map<string, StackValue>()
+    private static libStack = new Map<string, Map<string, StackValue>>()
     private status: 'running' | 'stop' = 'stop'
     constructor() {
         this.registerFunctions()
+    }
+    addLib(lib: SvmLib) {
+        Svm.libStack.set(lib.name, lib.stack)
     }
     get Status() {
         return this.status
@@ -97,7 +117,7 @@ export class Svm {
                 }
 
             } else if (token instanceof StackValue) {
-                this.registerVariable(token.id, token.type, token.value)
+                this.registerVariable(token.id, token.type, token.value, token.scope, token.scopeType)
             } else if (token instanceof AstToken) {
                 const left = this.getVariable(token.left.name)
                 const right = this.getVariable(token.right.name)
@@ -118,18 +138,27 @@ export class Svm {
     removeVariable(key: string) {
         this.stack.delete(key)
     }
-    getVariable(key: string) {
+    getVariable(key: string, clear = true) {
+        // local stack
         const variable = this.stack.get(key)
-        if (variable !== undefined && variable.scopeType === 'temp') {
+        if (variable !== undefined && variable.scopeType === 'temp' && clear) {
             this.removeVariable(key)
         }
         if (variable !== undefined && variable.type === 'referencing') {
             return this.stack.get(variable.value)
         }
+        // lib stack
+        if (variable === undefined) {
+            const libName = key.split('.')
+            const lib = Svm.libStack.get(libName[0])
+            if (lib && libName[1]) {
+                return lib.get(libName[1])
+            }
+        }
         return variable
     }
     setVariable(key: string, value: any, scope = '', scopeType: VariableScopeType = 'global') {
-        const val = this.getVariable(key)
+        const val = this.getVariable(key, false)
         if (val !== undefined) {
             val.value = value
             return

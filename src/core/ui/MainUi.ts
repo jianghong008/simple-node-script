@@ -131,6 +131,7 @@ export class MainUi {
             if (!this.logBox.visible) {
                 this.bottomBox.y = DataBus.app.screen.height - 60
                 this.logBox.removeItems()
+                this.logBox.scrollTo(0)
             } else {
                 this.bottomBox.y = DataBus.app.screen.height - 60 - this.logBox.height
             }

@@ -29,7 +29,6 @@ export class AstToken {
     operator: OperatorType
     left: ReferencingValue
     right: ReferencingValue
-    saveValue?: ReferencingValue
     constructor(id: string, type: AstTokenType, operator: OperatorType, left: ReferencingValue, right: ReferencingValue) {
         this.id = id
         this.type = type
@@ -111,7 +110,7 @@ export class SgToken {
     }
     static decode(node: BaseNode, path = '', tokens: any[] = [], father?: (StackValue | AstToken | AstBlock)) {
         path = path + '/' + node.id
-        const token = SgToken.parse(node, path)
+        const token = SgToken.parse(node, path, tokens, father)
         if (!token && node.type !== 'main') {
             throw new VmErr(node.id, `${node.titleContent} node wrong`)
         }
@@ -162,7 +161,7 @@ export class SgToken {
         return val
     }
 
-    private static parse(node: BaseNode, path: string = '') {
+    private static parse(node: BaseNode, path: string = '', tokens: any[] = [], father?: (StackValue | AstToken | AstBlock)) {
         let block: StackValue | AstToken | AstBlock | undefined
         if (node.type === 'Logic') {
             const condition = node.inputs[0]?.socket?.connection
@@ -208,16 +207,28 @@ export class SgToken {
                 const parms = input.socket.connection
                 if (!parms) {
                     continue
-
                 }
                 args.push({
                     type: 'Variable',
                     name: parms.node
                 })
-
             }
 
             block = new AstBlock(callFunc.id, 'CallFunction', [], callFunc.funcName, args, callFunc.funType)
+
+            // attributes create temp variable
+            for (const attr of callFunc.attributes) {
+                const tempVar = new StackValue(callFunc.id + attr.name, attr.type, attr.value, path, 'temp')
+                block.args?.push({
+                    type: 'Variable',
+                    name: tempVar.id
+                })
+                if(father instanceof AstBlock){
+                    father.body.push(tempVar)
+                }else{
+                    tokens.push(tempVar)
+                }
+            }
         }
 
         if (node.type === 'Referencing') {
@@ -229,7 +240,7 @@ export class SgToken {
 
         if (node.type === 'Variable') {
             const varNode = node as VariableNode
-            const t = varNode.getAttribute('type')?.type
+            const t = varNode.getAttribute('type')?.value
             if (!t) {
                 node.setNodeErr()
                 throw new VmErr(node.id, `${node.titleContent} type not found`)
@@ -240,7 +251,7 @@ export class SgToken {
             } else {
                 const val = varNode.getAttribute('value')?.value
                 const defaultValue = val ? val : varNode.getDefaultValue()
-                block = new StackValue(node.id, t, SgToken.variableToType(defaultValue, t), path)
+                block = new StackValue(node.id, t as VariableType, SgToken.variableToType(defaultValue, t as VariableType), path)
             }
         }
 
