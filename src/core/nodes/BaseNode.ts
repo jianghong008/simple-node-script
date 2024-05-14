@@ -132,7 +132,7 @@ export class BaseNode {
     }
     private onpointerdown(e: PIXI.FederatedPointerEvent) {
         const target = e.target as any
-        if (target && target.label === 'NodeSocket') {
+        if (!target || target.label === 'NodeSocket' || e.button !== 0) {
             return
         }
         this.dragging.isDragging = true

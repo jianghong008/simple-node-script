@@ -31,12 +31,14 @@ export class Stage {
             e.stopPropagation()
             GEvent.emit(EventType.PointerDown, e, this)
             if(e.button === 1){
+                DataBus.nodesBox.cursor = 'grabbing'
                 this.stagePointer.down = true
             }
             
         }
         this.app.canvas.onpointerup = (e) => {
             this.stagePointer.down = false
+            DataBus.nodesBox.cursor = 'default'
             GEvent.emit(EventType.PointerUp, e, this)
         }
         this.app.canvas.onpointermove = (e) => {
@@ -48,9 +50,11 @@ export class Stage {
         }
         this.app.canvas.onpointerout = (e) => {
             this.stagePointer.down = false
+            DataBus.nodesBox.cursor = 'default'
             GEvent.emit(EventType.PointerOut, e, this)
         }
         this.app.canvas.onpointercancel = (e) => {
+            DataBus.nodesBox.cursor = 'default'
             GEvent.emit(EventType.PointerCancel, e, this)
         }
 

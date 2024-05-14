@@ -234,7 +234,7 @@ export class MainUi {
             y: DataBus.nodesBox.y,
             scale: DataBus.nodesBox.scale.x
         }, DataBus.nodes)
-        console.log(json)
+        ComUtils.download(json)
     }
     private runScript() {
         if (this.svm.Status === 'running') {

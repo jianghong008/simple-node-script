@@ -109,7 +109,10 @@ export class Svm {
                     }
                 } else if (token.type === 'Loop') {
                     const condition = token.args?.map(arg => this.getVariable(arg.name)?.value)[0]
-                    while (Boolean(condition) === true && this.status === 'running') {
+                    while (Boolean(condition) === true) {
+                        if (this.status !== 'running') {
+                            throw new Error(`svm stoped`)
+                        }
                         await this.evaluate(token.body)
                     }
                 } else {
