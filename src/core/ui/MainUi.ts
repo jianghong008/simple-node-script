@@ -6,6 +6,8 @@ import { SgScript } from '../utils/SgScript';
 import { Svm } from '../svm/VM';
 import { NodeUtils } from '../utils/NodeUtils';
 import { ComUtils } from '../utils/com';
+import { $t } from '../../plugins/i18n';
+
 export class MainUi {
     public view: PIXI.Container
     private svm: Svm
@@ -174,9 +176,9 @@ export class MainUi {
             const nodeBox = new PIXI.Container()
             const nodeBg = new PIXI.Graphics()
             const text = new PIXI.Text({
-                text: key,
+                text: $t(key),
                 style: {
-                    fontSize: 18,
+                    fontSize: 16,
                     fill: 0xffffff
                 }
             })
@@ -193,6 +195,17 @@ export class MainUi {
             nodeBox.addChild(text)
             const btn = new UI.Button(nodeBox)
 
+            
+            btn.onPress.connect(() => {
+                scrollBox.visible = false
+                this.newNode(key)
+            })
+            btn.onHover.connect(() => {
+                nodeBg.alpha = 0.5
+            })
+            btn.onOut.connect(() => {
+                nodeBg.alpha = 1
+            })
             return btn
         })
         const scrollBox = new UI.ScrollBox({
@@ -210,28 +223,7 @@ export class MainUi {
         addBtn.onpointertap = () => {
             scrollBox.visible = !scrollBox.visible
         }
-        btns.forEach(btn => {
-            btn.onPress.connect(() => {
-                scrollBox.visible = false
-                const txt = btn.view.children.find(c => c instanceof PIXI.Text)
-                if (txt) {
-                    this.newNode((txt as PIXI.Text).text)
-                }
-
-            })
-            btn.onHover.connect(() => {
-                const g = btn.view.children.find(c => c instanceof PIXI.Graphics)
-                if (g) {
-                    g.alpha = 0.5
-                }
-            })
-            btn.onOut.connect(() => {
-                const g = btn.view.children.find(c => c instanceof PIXI.Graphics)
-                if (g) {
-                    g.alpha = 1
-                }
-            })
-        })
+        
         newBtn.addChild(scrollBox)
         return newBtn
     }

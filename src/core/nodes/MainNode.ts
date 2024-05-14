@@ -8,7 +8,7 @@ export class MainNode extends BaseNode {
         this.type = 'main'
         this.outputName = 'line'
         this.edit.delete = false
-        this.addOutput({ key: 'line1' })
+        this.addOutput({ key: 'line_1' })
         this.refresh()
     }
 

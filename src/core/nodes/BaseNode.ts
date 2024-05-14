@@ -3,6 +3,7 @@ import { EventType, GEvent } from '../utils/GEvent';
 import { NodeSocket } from './NodeSocket';
 import { Input, Select } from '@pixi/ui';
 import { DataBus } from '../utils/DataBus';
+import { $t } from '../../plugins/i18n';
 
 export class BaseNode {
     public id = ''
@@ -47,7 +48,7 @@ export class BaseNode {
         this.view.addChild(this.background);
         this.view.addChild(this.content);
         this.title = new PIXI.Text({
-            text: title,
+            text: $t(title),
             style: {
                 fontSize: 18,
                 fill: 0xffffff,
@@ -199,7 +200,7 @@ export class BaseNode {
         this.background.height = rect.height + 2 * this.padding
     }
 
-    setNodeErr(){
+    setNodeErr() {
         this.background.fill('#ff4444');
     }
 
@@ -240,7 +241,7 @@ export class BaseNode {
             const input = this._inputs[i];
             const y = this.padding + 20 * i * 1.5 + top
             const text = new PIXI.Text({
-                text: input.key,
+                text: $t(input.key),
                 style: {
                     fontSize: 16,
                     fill: 0xffffff,
@@ -249,7 +250,7 @@ export class BaseNode {
                     trim: true
                 }
             })
-
+            text.x = 5
             text.y = y
             const textRect = text.getLocalBounds();
             if (textRect.width > 60) {
@@ -270,7 +271,7 @@ export class BaseNode {
                 more.x = 62
                 this.inputsBox.addChild(more);
             }
-            input.socket = new NodeSocket(input.key, this, -this.padding - 10, y)
+            input.socket = new NodeSocket(input.key, this, -this.padding - 5, y + 2.5)
             if (input.parms) {
                 input.socket.connection = input.parms
             }
@@ -288,7 +289,7 @@ export class BaseNode {
             const output = this._outputs[i];
             const y = this.padding + 20 * i * 1.5 + top
             const text = new PIXI.Text({
-                text: output.key,
+                text: $t(output.key),
                 style: {
                     fontSize: 16,
                     fill: 0xffffff,
@@ -360,7 +361,7 @@ export class BaseNode {
     }
 
     private onAddOutput() {
-        this.addOutput({ key: this.outputName + (this._outputs.length + 1) })
+        this.addOutput({ key: this.outputName + '_' + (this._outputs.length + 1) })
     }
 
     private createOutputRemoveAction(x: number, y: number, key: string) {
@@ -413,7 +414,7 @@ export class BaseNode {
         for (let i = 0; i < this._attributes.length; i++) {
             const attribute = this._attributes[i];
             const text = new PIXI.Text({
-                text: attribute.name,
+                text: $t(attribute.name),
                 style: {
                     fontSize: 16,
                     fill: 0xffffff,
@@ -447,7 +448,7 @@ export class BaseNode {
     private createValueText(x: number, y: number, attr: NodeAttribute) {
         const temp = attr.value.split('_').slice(0, 2)
         const valText = new PIXI.Text({
-            text: temp.join('_'),
+            text: $t(temp.join('_')),
             style: {
                 fontSize: 15,
                 fill: 0xffdd00,
@@ -519,7 +520,7 @@ export class BaseNode {
                 align: 'center'
             },
             items: {
-                items: attr.options || [],
+                items: (attr.options || []),
                 backgroundColor: '#3f51b5',
                 hoverColor: '#263274',
                 width: w,

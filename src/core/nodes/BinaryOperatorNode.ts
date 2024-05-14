@@ -5,8 +5,8 @@ export class BinaryOperatorNode extends BaseNode {
         super(name ? name : 'BinaryOperator')
         this.edit.out = false
         this.type = 'BinaryOperator'
-        this.addInput({ key: 'input1' })
-        this.addInput({ key: 'input2' })
+        this.addInput({ key: 'input_1' })
+        this.addInput({ key: 'input_2' })
         this.addOutput({ key: 'output' })
         this.addAttribute({
             name: "type",
