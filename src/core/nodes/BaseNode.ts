@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js';
 import { EventType, GEvent } from '../utils/GEvent';
 import { NodeSocket } from './com/NodeSocket';
-import { Input, Select } from '@pixi/ui';
+import { Select } from '@pixi/ui';
 import { DataBus } from '../utils/DataBus';
 import { $t } from '../../plugins/i18n';
 import { InputBox } from './com/InputBox';
@@ -101,17 +101,19 @@ export class BaseNode {
         return this.view.x
     }
     set x(v) {
-        this.view.x = v
+        this.view.x = Math.floor(v)
     }
     get y() {
         return this.view.y
     }
     set y(v) {
-        this.view.y = v
+        this.view.y = Math.floor(v)
     }
     center() {
-        this.x = (DataBus.app.screen.width - this.width) / 2
-        this.view.y = (DataBus.app.screen.height - this.width) / 2
+        let pos = new PIXI.Point(DataBus.app.screen.width / 2, DataBus.app.screen.height / 2)
+        pos = DataBus.nodesBox.toLocal(pos, this.view)
+        this.x = pos.x - this.width / 2
+        this.y = pos.y
         this.view.zIndex = 100
     }
     update() {
@@ -225,6 +227,14 @@ export class BaseNode {
 
     setNodeErr() {
         this.background.fill('#ff4444');
+    }
+
+    setNodeActive() {
+        this.background.fill('#009688');
+    }
+
+    setNodeUnActive() {
+        this.background.fill('#5469ca');
     }
 
     addOutput(output: SocketObject) {

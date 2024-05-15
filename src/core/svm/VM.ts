@@ -1,4 +1,5 @@
 import { BaseNode } from "../nodes/BaseNode";
+import { DataBus } from "../utils/DataBus";
 import { AstBlock, AstToken, SgToken, StackValue } from "./SgToken";
 import { BuiltInFuntions } from "./vm-config";
 
@@ -40,14 +41,14 @@ export class Svm {
         }
     }
     registerFunction(key: string, func: Function) {
-        const value = new StackValue(key, 'function', func, '')
+        const value = new StackValue('',key, 'function', func, '')
         this.stack.set(key, value)
     }
     registerVariable(key: string, type: VariableType, value: any, scope = '', scopeType: VariableScopeType = 'global') {
         if (this.getVariable(key) !== undefined) {
             return
         }
-        const val = new StackValue(key, type, value, scope, scopeType)
+        const val = new StackValue('',key, type, value, scope, scopeType)
         this.stack.set(key, val)
     }
     /**
@@ -73,7 +74,7 @@ export class Svm {
             return
         }
         for (const token of tokens) {
-
+            DataBus.activeNode(token.nodeId)
             if (token instanceof AstBlock) {
                 if (token.type === 'Function') {
                     await this.evaluate(token.body)

@@ -26,6 +26,19 @@ export class DataBus {
         this.nodesBox.removeChild(node.view)
     }
 
+    public static activeNode(id:string){
+        const node = this.nodes.find(node => node.id === id)
+        if(node){
+            node.setNodeActive()
+        }
+    }
+
+    public static resetNodeActive(){
+        for(const node of this.nodes){
+            node.setNodeUnActive()
+        }
+    }
+
     public static get input() {
         if (!DataBus._input) {
             DataBus._input = document.createElement('input')

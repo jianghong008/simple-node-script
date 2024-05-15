@@ -24,14 +24,6 @@ export class InputBox extends PIXI.Container {
         this.input.mask = mask
         this.addChild(this.bg, mask, this.input)
 
-        // this.input.style.left = pos.x + 'px'
-        // this.input.style.top = pos.y + 'px'
-        // DataBus.input
-        // this.input.style.fontSize = 16*window.devicePixelRatio + 'px'
-        // this.input.onchange = () => {
-        //     this.onChange?.call(this, this.input.value)
-        // }
-
         this.init()
     }
 
@@ -46,15 +38,18 @@ export class InputBox extends PIXI.Container {
         this.onpointertap = () => {
             DataBus.input.value = this.input.text
             this.input.visible = false
-            DataBus.input.style.display = 'inlineBlock'
-            DataBus.input.style.fontSize = 16 * window.devicePixelRatio + 'px'
+            DataBus.input.style.display = 'block'
+            DataBus.input.style.fontSize = (16 * DataBus.nodesBox.scale.x) + 'px'
             const pos = this.toGlobal({x:0,y:0})
-            DataBus.input.style.left = pos.x + 'px'
-            DataBus.input.style.top = pos.y + 'px'
-            DataBus.input.style.width = this.width + 'px'
-            DataBus.input.focus()
+            DataBus.input.style.left = (pos.x) + 'px'
+            DataBus.input.style.top = (pos.y) + 'px'
+            DataBus.input.style.width = (this.width * DataBus.nodesBox.scale.x) + 'px'
             DataBus.input.oninput = this.onInput.bind(this)
             DataBus.input.onblur = this.onBlur.bind(this)
+            DataBus.input.onchange = ()=>{
+                this.onChange?.call(this,DataBus.input.value)
+            }
+            DataBus.input.focus()
         }
     }
 

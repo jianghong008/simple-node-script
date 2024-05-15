@@ -30,11 +30,11 @@ export class Stage {
         this.app.canvas.onpointerdown = (e) => {
             e.stopPropagation()
             GEvent.emit(EventType.PointerDown, e, this)
-            if(e.button === 1){
+            if (e.button === 1) {
                 DataBus.nodesBox.cursor = 'grabbing'
                 this.stagePointer.down = true
             }
-            
+
         }
         this.app.canvas.onpointerup = (e) => {
             this.stagePointer.down = false
@@ -74,8 +74,11 @@ export class Stage {
         DataBus.nodesBox.x += e.movementX
         DataBus.nodesBox.y += e.movementY
     }
-    private onwheel(e: WheelEvent){
-        const mousePos = {x:e.screenX,y:e.screenY};
+    private onwheel(e: WheelEvent) {
+        if (DataBus.input === document.activeElement) {
+            return
+        }
+        const mousePos = { x: e.screenX, y: e.screenY };
         const mousePosInContainer = DataBus.nodesBox.toLocal(mousePos);
         const scaleFactor = e.deltaY > 0 ? 1.1 : 0.9;
 

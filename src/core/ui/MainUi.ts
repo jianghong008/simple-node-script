@@ -38,7 +38,7 @@ export class MainUi {
         this.svm = new Svm()
     }
     private async init() {
-        // this.registerConsole()
+        this.registerConsole()
         await this.preload()
         this.createTopActions()
         this.createBottomActions()
@@ -197,7 +197,7 @@ export class MainUi {
             nodeBox.addChild(text)
             const btn = new UI.Button(nodeBox)
 
-            
+
             btn.onPress.connect(() => {
                 scrollBox.visible = false
                 this.newNode(key)
@@ -225,7 +225,7 @@ export class MainUi {
         addBtn.onpointertap = () => {
             scrollBox.visible = !scrollBox.visible
         }
-        
+
         newBtn.addChild(scrollBox)
         return newBtn
     }
@@ -248,8 +248,13 @@ export class MainUi {
     private async newNode(t: string) {
         try {
             const nodeName = `${t}Node`
-            const count = DataBus.nodes.filter(node => node.titleContent.includes(t)).length
-            const newName = `${t}_${count}`
+            const nodes = DataBus.nodes.filter(node => node.titleContent.includes(t))
+            const ids = nodes.map(node => {
+                const temp = node.titleContent.trim().split('_')
+                return Number(temp[1])
+            })
+            const max = (ids.length > 0 ? Math.max(...ids) : 0) + 1
+            const newName = `${t}_${max}`
             const node = await NodeUtils.newNode(t, newName)
             if (!node) {
                 console.error(`node ${nodeName} not found`)
