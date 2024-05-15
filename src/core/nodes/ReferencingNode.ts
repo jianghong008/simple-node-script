@@ -1,5 +1,5 @@
 import { BaseNode } from "./BaseNode";
-import { NodeSocket } from "./NodeSocket";
+import { NodeSocket } from "./com/NodeSocket";
 export class ReferencingNode extends BaseNode {
     public value: any = 0
     constructor(name?: string, val?: string) {

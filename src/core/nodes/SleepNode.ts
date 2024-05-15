@@ -8,6 +8,11 @@ export class SleepNode extends BuiltInFunc {
         this.funType = 'async'
         this.addInput({ key: 'line' })
         this.addInput({ key: 'input' })
+        this.addAttribute({
+            name: "waitTime",
+            value: '1000',
+            type: 'string',
+        })
         this.refresh()
     }
 }

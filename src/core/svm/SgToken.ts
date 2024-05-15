@@ -200,6 +200,9 @@ export class SgToken {
             const callFunc = node as BuiltInFunc
             const args: ReferencingValue[] = []
             for (const input of callFunc.inputs) {
+                if (input.key === 'line') {
+                    continue
+                }
                 const parms = input.socket.connection
                 if (!parms) {
                     continue

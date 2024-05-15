@@ -255,9 +255,7 @@ export class MainUi {
                 console.error(`node ${nodeName} not found`)
                 return
             }
-
-            node.x = DataBus.app.screen.width / 2 - node.width / 2
-            node.y = DataBus.app.screen.height / 2 - node.width / 2
+            node.center()
             DataBus.nodesBox.addChild(node.view)
             DataBus.nodes.push(node)
         } catch (error) {

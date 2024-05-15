@@ -1,9 +1,10 @@
 import * as PIXI from 'pixi.js';
 import { EventType, GEvent } from '../utils/GEvent';
-import { NodeSocket } from './NodeSocket';
+import { NodeSocket } from './com/NodeSocket';
 import { Input, Select } from '@pixi/ui';
 import { DataBus } from '../utils/DataBus';
 import { $t } from '../../plugins/i18n';
+import { InputBox } from './com/InputBox';
 
 export class BaseNode {
     public id = ''
@@ -145,13 +146,29 @@ export class BaseNode {
         this.dragging.x = e.clientX
         this.dragging.y = e.clientY
         this.view.zIndex = 1
+
     }
     private onpointermove(e: PIXI.FederatedPointerEvent) {
         if (this.dragging.isDragging) {
             this.view.cursor = 'grabbing'
-            this.x += e.movementX
-            this.y += e.movementY
+            this.moveSelfAndChildren(this, e.movementX, e.movementY)
+
         }
+    }
+    private moveSelfAndChildren(node: BaseNode, x: number, y: number) {
+        node.x += x
+        node.y += y
+
+        node.outputs.forEach(output => {
+            const id = output.socket?.connection?.node
+            if (id) {
+                const child = DataBus.nodes.find(n => n.id === id)
+                if (child) {
+                    this.moveSelfAndChildren(child, x, y)
+
+                }
+            }
+        })
     }
     private onpointerenter() {
         this.background.clear()
@@ -472,35 +489,16 @@ export class BaseNode {
     }
 
     private createInputElement(x: number, y: number, attr: NodeAttribute) {
-        const box = new PIXI.Container({ x, y })
-        const bg = new PIXI.Graphics()
         const w = 80
         const h = 20
-        bg.roundRect(0, 0, w, h, 5)
-        bg.fill(0x3f51b5)
-        const input = new Input({
-            bg,
-            value: attr.value,
-            textStyle: {
-                fontSize: 16,
-                fill: 0xffffff,
-                align: 'center',
-            },
-            align: 'center'
-        });
-        input.width = w
-        const mask = new PIXI.Graphics()
-        mask.roundRect(0, 0, w, h, 5)
-        mask.fill(0x3f51b5)
-        input.mask = mask
-        box.addChild(mask, input)
-        input.onChange.connect(() => {
+
+        const input = new InputBox(x, y, w, h, attr.value)
+        input.onChange = () => {
             attr.value = input.value
-        })
-        input.onEnter.connect(() => {
             this.onAttibuteChange?.call(this, attr)
-        })
-        return box
+        }
+
+        return input
     }
 
     private createAttrSelect(x: number, y: number, attr: NodeAttribute) {
@@ -569,6 +567,7 @@ export class BaseNode {
         select.onSelect.connect((_: number, value: string) => {
             attr.value = value
             this.onAttibuteChange?.call(this, attr)
+            this.outputBox.visible = true
         })
         return select
     }

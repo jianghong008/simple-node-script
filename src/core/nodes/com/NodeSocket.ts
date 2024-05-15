@@ -1,7 +1,7 @@
-import { Stage } from "../../stage";
-import { DataBus } from "../utils/DataBus";
-import { EventType, GEvent } from "../utils/GEvent";
-import { BaseNode } from "./BaseNode"
+import { Stage } from "../../../stage";
+import { DataBus } from "../../utils/DataBus";
+import { EventType, GEvent } from "../../utils/GEvent";
+import { BaseNode } from "../BaseNode"
 import * as PIXI from 'pixi.js';
 
 interface SocketConnection {

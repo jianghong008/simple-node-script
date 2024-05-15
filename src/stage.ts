@@ -58,6 +58,11 @@ export class Stage {
             GEvent.emit(EventType.PointerCancel, e, this)
         }
 
+        this.app.canvas.onwheel = (e) => {
+            this.onwheel(e)
+            GEvent.emit(EventType.Wheel, e, this)
+        }
+
         this.app.canvas.oncontextmenu = (e) => {
             e.preventDefault()
         }
@@ -68,6 +73,18 @@ export class Stage {
         }
         DataBus.nodesBox.x += e.movementX
         DataBus.nodesBox.y += e.movementY
+    }
+    private onwheel(e: WheelEvent){
+        const mousePos = {x:e.screenX,y:e.screenY};
+        const mousePosInContainer = DataBus.nodesBox.toLocal(mousePos);
+        const scaleFactor = e.deltaY > 0 ? 1.1 : 0.9;
+
+        DataBus.nodesBox.scale.x *= scaleFactor;
+        DataBus.nodesBox.scale.y *= scaleFactor;
+
+        const newMousePosInContainer = DataBus.nodesBox.toLocal(mousePos);
+        DataBus.nodesBox.position.x += (newMousePosInContainer.x - mousePosInContainer.x) * DataBus.nodesBox.scale.x;
+        DataBus.nodesBox.position.y += (newMousePosInContainer.y - mousePosInContainer.y) * DataBus.nodesBox.scale.y;
     }
     async init() {
         this.intEvents()

@@ -5,6 +5,7 @@ export enum EventType {
     PointerEnter = 'pointerenter',
     PointerOut = 'pointerout',
     PointerCancel = 'pointercancel',
+    Wheel = 'onwheel',
 }
 export class GEvent {
     private static _handlers: { [key: string | number]: Function[] } = {}
