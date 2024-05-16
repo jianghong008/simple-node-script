@@ -7,6 +7,8 @@ import { Svm } from '../svm/VM';
 import { NodeUtils } from '../utils/NodeUtils';
 import { ComUtils } from '../utils/com';
 import { $t } from '../../plugins/i18n';
+import { SgToken } from '../svm/SgToken';
+import { EditotBuiltInFuntions } from '../svm/editor';
 
 export class MainUi {
     public view: PIXI.Container
@@ -15,6 +17,7 @@ export class MainUi {
     private runTimer?: number
     private logBox: UI.ScrollBox
     private bottomBox: UI.List
+    // private worker?: Worker
     constructor() {
         this.view = new PIXI.Container()
         this.logBox = new UI.ScrollBox({
@@ -36,9 +39,13 @@ export class MainUi {
         })
         this.init()
         this.svm = new Svm()
+
+        for (const k in EditotBuiltInFuntions) {
+            this.svm.registerFunction(k, Reflect.get(EditotBuiltInFuntions, k),'','builtin')
+        }
     }
     private async init() {
-        this.registerConsole()
+        // this.registerConsole()
         await this.preload()
         this.createTopActions()
         this.createBottomActions()
@@ -243,7 +250,8 @@ export class MainUi {
             return
         }
         this.runTimer = setInterval(this.update.bind(this), 100)
-        this.svm.execute(DataBus.nodes)
+        const tokens = SgToken.create(DataBus.nodes)
+        this.svm.execute(tokens)
     }
     private async newNode(t: string) {
         try {

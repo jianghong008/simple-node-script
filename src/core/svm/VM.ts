@@ -1,8 +1,105 @@
-import { BaseNode } from "../nodes/BaseNode";
-import { DataBus } from "../utils/DataBus";
-import { AstBlock, AstToken, SgToken, StackValue, SvnToken } from "./SgToken";
 import { BuiltInFuntions } from "./vm-config";
+export class SvnToken {
+    nodeId: string
+    body?: SvnToken[]
+    args?: ReferencingValue[]
+    constructor(nodeId: string) {
+        this.nodeId = nodeId
+    }
+}
+export class StackValue extends SvnToken {
+    type: VariableType
+    value: any
+    id: string
+    scope: string
+    scopeType: VariableScopeType = 'global'
+    constructor(nodeId: string, id: string, type: VariableType, value: any, scope: string, scopeType: VariableScopeType = 'global') {
+        super(nodeId)
+        this.type = type
+        this.value = value
+        this.id = id
+        this.scope = scope
+        this.scopeType = scopeType
+    }
+    toString() {
+        return this.id
+    }
+}
 
+export class AstToken extends SvnToken {
+    id: string
+    type: AstTokenType
+    operator: OperatorType
+    left: ReferencingValue
+    right: ReferencingValue
+    constructor(nodeId: string, id: string, type: AstTokenType, operator: OperatorType, left: ReferencingValue, right: ReferencingValue) {
+        super(nodeId)
+        this.id = id
+        this.type = type
+        this.operator = operator
+        this.left = left
+        this.right = right
+    }
+    operate(left: StackValue, right: StackValue) {
+        if (left.type === 'number' && right.type === 'number') {
+            switch (this.operator) {
+                case '+':
+                    return left.value + right.value
+                case '-':
+                    return left.value - right.value
+                case '*':
+                    return left.value * right.value
+                case '/':
+                    return left.value / right.value
+                case '%':
+                    return left.value % right.value
+                case '==':
+                    return left.value === right.value
+                case '!=':
+                    return left.value !== right.value
+                case '<':
+                    return left.value < right.value
+                case '>':
+                    return left.value > right.value
+                case '<=':
+                    return left.value <= right.value
+                case '>=':
+                    return left.value >= right.value
+            }
+        }
+
+        if (left.type === 'string' && right.type === 'string') {
+            return left.value + right.value
+        }
+
+        if (left.value === 'boolean' && right.value === 'boolean') {
+            switch (this.operator) {
+                case '&&':
+                    return left.value && right.value
+                case '||':
+                    return left.value || right.value
+            }
+        }
+    }
+}
+
+export class AstBlock extends SvnToken {
+    id: string
+    type: AstBlockType
+    body: SvnToken[]
+    funcName?: string
+    args?: ReferencingValue[]
+    funType?: 'async' | 'sync' = 'sync'
+    constructor(nodeId: string, id: string, type: AstBlockType, body: AstToken[], funcName?: string, args?: ReferencingValue[], funType?: 'async' | 'sync') {
+        super(nodeId)
+        this.id = id
+        this.type = type
+        this.body = body
+        this.funcName = funcName
+        this.args = args
+        this.funType = funType
+    }
+}
 export class SvmLib {
     protected svm: Svm
     protected _stack: Map<string, StackValue>
@@ -37,12 +134,12 @@ export class Svm {
         for (const key in BuiltInFuntions) {
             const func = Reflect.get(BuiltInFuntions, key)
             if (typeof func === 'function') {
-                this.registerFunction(key, func)
+                this.registerFunction(key, func, '', 'builtin')
             }
         }
     }
-    registerFunction(key: string, func: Function) {
-        const value = new StackValue('', key, 'function', func, '')
+    registerFunction(key: string, func: Function, scope: string, scopeType?: VariableScopeType) {
+        const value = new StackValue('', key, 'function', func, scope, scopeType)
         this.stack.set(key, value)
     }
     registerVariable(key: string, type: VariableType, value: any, scope = '', scopeType: VariableScopeType = 'global') {
@@ -52,16 +149,23 @@ export class Svm {
         const val = new StackValue('', key, type, value, scope, scopeType)
         this.stack.set(key, val)
     }
+    private clearStack() {
+        this.stack.forEach(val => {
+            if (val.scopeType !== 'builtin') {
+                this.stack.delete(val.id)
+            }
+        })
+    }
     /**
      * execute nodes
      * @param nodes 
      */
-    async execute(nodes: BaseNode[]) {
+    async execute(tokens: SvnToken[]) {
         this.status = 'running'
         try {
-            this.tokens = SgToken.create(nodes)
-            this.stack.clear()
-            this.registerFunctions()
+            this.tokens = tokens
+
+            this.clearStack()
             await this.evaluate(this.tokens)
             this.status = 'stop'
         } catch (error) {
@@ -75,7 +179,7 @@ export class Svm {
             return
         }
         for (const token of tokens) {
-            DataBus.activeNode(token.nodeId)
+
             await this.evaluateToken(token)
         }
     }
@@ -128,7 +232,7 @@ export class Svm {
 
             if (argToken instanceof AstToken && argToken.type === 'BinaryExpression') {
                 this.evaluateBinaryExpression(argToken)
-            }else if(argToken instanceof AstBlock && argToken.type === 'CallFunction'){
+            } else if (argToken instanceof AstBlock && argToken.type === 'CallFunction') {
                 await this.evaluateFunction(token)
             }
 
