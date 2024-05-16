@@ -237,7 +237,7 @@ export class MainUi {
         }, DataBus.nodes)
         ComUtils.webDownload(json)
     }
-    private runScript() {
+    private async runScript() {
         if (this.svm.Status === 'running') {
             this.svm.stop()
             return

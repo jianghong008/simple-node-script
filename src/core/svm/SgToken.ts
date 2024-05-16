@@ -6,6 +6,8 @@ import { VariableNode } from "../nodes/VariableNode";
 import { VmErr } from "./VmErr";
 export class SvnToken {
     nodeId: string
+    body?:SvnToken[]
+    args?: ReferencingValue[]
     constructor(nodeId: string) {
         this.nodeId = nodeId
     }
@@ -89,7 +91,7 @@ export class AstToken extends SvnToken{
 export class AstBlock extends SvnToken{
     id: string
     type: AstBlockType
-    body: (StackValue | AstToken | AstBlock)[]
+    body: SvnToken[]
     funcName?: string
     args?: ReferencingValue[]
     funType?: 'async' | 'sync' = 'sync'
@@ -116,7 +118,7 @@ export class SgToken {
         SgToken.decode(main, '', tokens)
         return tokens
     }
-    static decode(node: BaseNode, path = '', tokens: any[] = [], father?: (StackValue | AstToken | AstBlock)) {
+    static decode(node: BaseNode, path = '', tokens: any[] = [], father?: SvnToken) {
         path = path + '/' + node.id
         const token = SgToken.parse(node, path, tokens, father)
         if (!token && node.type !== 'main') {
@@ -169,8 +171,8 @@ export class SgToken {
         return val
     }
 
-    private static parse(node: BaseNode, path: string = '', tokens: any[] = [], father?: (StackValue | AstToken | AstBlock)) {
-        let block: StackValue | AstToken | AstBlock | undefined
+    private static parse(node: BaseNode, path: string = '', tokens: any[] = [], father?: SvnToken) {
+        let block: SvnToken | undefined
         if (node.type === 'Logic') {
             const condition = node.inputs[0]?.socket?.connection
             if (condition === undefined) {
@@ -252,7 +254,7 @@ export class SgToken {
                 }
                 block = new AstBlock(node.id,node.id, 'SetVariable', [], undefined, [vari, inputVari], undefined)
                 const temp = new StackValue(node.id,node.id, 'referencing', SgToken.variableToType(val, 'referencing'), path, 'temp')
-                block.body.push(temp)
+                block.body?.push(temp)
             } else {
                 block = new StackValue(node.id,node.id, 'referencing', SgToken.variableToType(val, 'referencing'), path)
             }
@@ -302,7 +304,6 @@ export class SgToken {
                     name: vari
                 }
             }
-
 
             const socket2 = express.inputs[1]
             const leftNode2 = SgToken.findNode(socket2.socket?.connection?.node)

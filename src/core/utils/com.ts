@@ -44,4 +44,7 @@ export class ComUtils {
             input.click()
         })
     }
+    static wait(ms: number) {
+        return new Promise(resolve => setTimeout(resolve, ms))
+    }
 }
