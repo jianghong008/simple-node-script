@@ -17,6 +17,7 @@ export class Stage {
             width: rect.width,
             height: rect.height,
             antialias: true,
+            resizeTo:window,
         }).then(() => {
             div.appendChild(this.app.canvas)
             DataBus.nodesBox = new PIXI.Container()
