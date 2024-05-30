@@ -17,6 +17,7 @@ export class BaseNode {
     protected inputsBox: PIXI.Container
     protected attributesBox: PIXI.Container
     protected customBox: PIXI.Container
+    public textResolution = window.devicePixelRatio * 4
     public boxRadius = 2
     public outputName = 'output'
     public type = 'node'
@@ -58,6 +59,7 @@ export class BaseNode {
                 fontWeight: 'bold'
             }
         });
+        this.title.resolution = this.textResolution
         this.content.addChild(this.title);
 
         this.attributesBox = new PIXI.Container({ x: this.padding, y: this.padding + 18 });
@@ -272,7 +274,7 @@ export class BaseNode {
         const top = this.attributesBox.getBounds().height + this.attributesBox.y + this.padding / 2
         for (let i = 0; i < this._inputs.length; i++) {
             const input = this._inputs[i];
-            const y = this.padding + 20 * i * 1.5 + top
+            const y = Math.round(this.padding + 20 * i * 1.5 + top)
             const text = new PIXI.Text({
                 text: $t(input.key),
                 style: {
@@ -283,6 +285,7 @@ export class BaseNode {
                     trim: true
                 }
             })
+            text.resolution = this.textResolution
             text.x = 5
             text.y = y
             const textRect = text.getLocalBounds();
@@ -300,7 +303,7 @@ export class BaseNode {
                         trim: true
                     }
                 })
-                more.y = y + 8
+                more.y = Math.round(y + 8)
                 more.x = 62
                 this.inputsBox.addChild(more);
             }
@@ -320,7 +323,7 @@ export class BaseNode {
         const x = this.width / 2 - this.padding / 2
         for (let i = 0; i < this._outputs.length; i++) {
             const output = this._outputs[i];
-            const y = this.padding + 20 * i * 1.5 + top
+            const y = Math.round(this.padding + 20 * i * 1.5 + top)
             const text = new PIXI.Text({
                 text: $t(output.key),
                 style: {
@@ -331,7 +334,7 @@ export class BaseNode {
                     trim: true
                 }
             })
-
+            text.resolution = this.textResolution
             text.y = y
             const textRect = text.getLocalBounds();
             if (textRect.width > 60) {
@@ -365,7 +368,7 @@ export class BaseNode {
             this.createOutputRemoveAction(x - 30, y + 5, output.key)
 
         }
-        const y = this.padding + 20 * this._outputs.length * 1.5 + top
+        const y = Math.round(this.padding + 20 * this._outputs.length * 1.5 + top)
         this.createOutputAddAction(x - 10, y)
         this.rerender()
     }
@@ -457,6 +460,7 @@ export class BaseNode {
                     align: 'center'
                 }
             })
+            text.resolution = this.textResolution
             text.y = this.padding + 20 * i * 1.5
             this.attributesBox.addChild(text);
 
@@ -493,6 +497,7 @@ export class BaseNode {
                 fontWeight: 'bold'
             }
         })
+        valText.resolution = this.textResolution
         valText.y = y
         valText.x = x
         return valText
@@ -556,7 +561,7 @@ export class BaseNode {
                 radius: 4
             }
         });
-
+        
         select.x = x
         select.y = y
         select.onpointerenter = () => {

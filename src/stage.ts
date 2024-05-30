@@ -3,7 +3,6 @@ import { EventType, GEvent } from './core/utils/GEvent';
 import { DataBus } from './core/utils/DataBus';
 import { MainUi } from './core/ui/MainUi';
 import { MainNode } from './core/nodes/MainNode';
-
 export class Stage {
     public app: PIXI.Application;
     private stagePointer = {
@@ -17,7 +16,11 @@ export class Stage {
             width: rect.width,
             height: rect.height,
             antialias: true,
-            resizeTo:window,
+            resizeTo: window,
+            autoDensity: true,
+            resolution: window.devicePixelRatio||1,
+            depth: true,
+
         }).then(() => {
             div.appendChild(this.app.canvas)
             DataBus.nodesBox = new PIXI.Container()
