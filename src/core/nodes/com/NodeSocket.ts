@@ -112,8 +112,8 @@ export class NodeSocket {
         }
         this.parent.updateSocket(this)
 
-        this.parent.onConnect?.call(this,this,socket)
-        socket.parent.onConnect?.call(this,this,socket)
+        this.parent.onConnect?.call(this, this, socket)
+        socket.parent.onConnect?.call(this, this, socket)
     }
 
     public disconnect() {
@@ -146,7 +146,20 @@ export class NodeSocket {
         this.view.moveTo(5, 5)
         let end = socket.view.toGlobal(new PIXI.Point(0, 0))
         end = this.view.toLocal(end)
-        this.view.lineTo(end.x + 5, end.y + 5)
+        end.x += 5
+        end.y += 5
+        let lineWidth = Math.abs(end.x - 5) > 50 ? 50 : 0
+        if(Math.abs(end.y - 5) > 50){
+            lineWidth = 80
+        }
+        
+        if(lineWidth === 0){
+            this.view.lineTo(end.x, end.y)
+        }else{
+            const c1 = new PIXI.Point(lineWidth, 20)
+            const c2 = new PIXI.Point(end.x - lineWidth, end.y - 20)
+            this.view.bezierCurveTo(c1.x, c1.y, c2.x, c2.y, end.x, end.y)
+        }
         this.view.stroke({ color: 0xffffff, width: 4 })
 
         socket.connection = {
@@ -171,9 +184,6 @@ export class NodeSocket {
         if (this.type === 'output') {
             const input = node.inputs.find(input => input.socket?.key === this.connection?.socket)
             socket = input?.socket
-        } else {
-            const output = node.outputs.find(output => output.socket?.key === this.connection?.socket)
-            socket = output?.socket
         }
         this.connectSocket(socket)
     }
