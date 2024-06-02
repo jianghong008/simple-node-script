@@ -8,6 +8,8 @@ export class DataBus {
     public static app: PIXI.Application
     public static nodesBox: PIXI.Container
     private static _input?: HTMLInputElement
+    public static compilerReady = false
+
     public static set(key: string, value: any) {
         this._data[key] = value
     }

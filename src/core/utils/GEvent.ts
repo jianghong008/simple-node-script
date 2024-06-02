@@ -6,6 +6,10 @@ export enum EventType {
     PointerOut = 'pointerout',
     PointerCancel = 'pointercancel',
     Wheel = 'onwheel',
+    CompilerReady = 'compilerReady',
+    CompilerMessage = 'compilermessage',
+    CompilerClose = 'compilerclose',
+    CompilerError = 'compilererror',
 }
 export class GEvent {
     private static _handlers: { [key: string | number]: Function[] } = {}

@@ -3,21 +3,19 @@ import * as UI from '@pixi/ui'
 import { DataBus } from '../utils/DataBus';
 import { TopMenus } from './config';
 import { SgScript } from '../utils/SgScript';
-import { Svm } from '../svm/VM';
 import { NodeUtils } from '../utils/NodeUtils';
 import { ComUtils } from '../utils/com';
 import { $t } from '../../plugins/i18n';
 import { SgToken } from '../svm/SgToken';
-import { EditotBuiltInFuntions } from '../svm/editor';
+import { Compiler, CompilerStatus } from '../utils/Compiler';
 
 export class MainUi {
     public view: PIXI.Container
-    private svm: Svm
     private runBtn?: UI.Button
     private runTimer?: number
     private logBox: UI.ScrollBox
     private bottomBox: UI.List
-    // private worker?: Worker
+    private compiler:Compiler = new Compiler()
     constructor() {
         this.view = new PIXI.Container()
         this.logBox = new UI.ScrollBox({
@@ -38,17 +36,14 @@ export class MainUi {
             elementsMargin: 5
         })
         this.init()
-        this.svm = new Svm()
-
-        for (const k in EditotBuiltInFuntions) {
-            this.svm.registerFunction(k, Reflect.get(EditotBuiltInFuntions, k),'','builtin')
-        }
     }
     private async init() {
         // this.registerConsole()
         await this.preload()
         this.createTopActions()
         this.createBottomActions()
+
+        this.compiler.init()
     }
     private registerConsole() {
         window.console.log = (msg, data) => {
@@ -148,7 +143,7 @@ export class MainUi {
     }
 
     private update() {
-        if (this.svm.Status === 'stop') {
+        if (this.compiler.status === CompilerStatus.Stop) {
             clearInterval(this.runTimer)
             if (!this.runBtn) {
                 return
@@ -245,13 +240,12 @@ export class MainUi {
         ComUtils.webDownload(json)
     }
     private async runScript() {
-        if (this.svm.Status === 'running') {
-            this.svm.stop()
+        if (this.compiler.status === CompilerStatus.Running) {
             return
         }
         this.runTimer = setInterval(this.update.bind(this), 100)
         const tokens = SgToken.create(DataBus.nodes)
-        this.svm.execute(tokens)
+        this.compiler.execute(tokens)
     }
     private async newNode(t: string) {
         try {

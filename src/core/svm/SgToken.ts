@@ -2,6 +2,7 @@ import { BaseNode } from "../nodes/BaseNode";
 import { BinaryOperatorNode } from "../nodes/BinaryOperatorNode";
 import { BuiltInFunc } from "../nodes/BuiltInFunc";
 import { ReferencingNode } from "../nodes/ReferencingNode";
+import { UnaryOperatorNode } from "../nodes/UnaryOperatorNode";
 import { VariableNode } from "../nodes/VariableNode";
 import { AstBlock, AstToken, StackValue, SvnToken } from "./VM";
 import { VmErr } from "./VmErr";
@@ -14,7 +15,7 @@ export class SgToken {
             throw new VmErr('main', 'main not found')
         }
         SgToken.nodes = nodes
-        const tokens: any[] = []
+        const tokens: SvnToken[] = []
         SgToken.decode(main, '', tokens)
         return tokens
     }
@@ -83,7 +84,7 @@ export class SgToken {
                 name: condition.node,
                 type: 'Variable'
             }
-            block = new AstBlock(node.id,node.id, 'Logic', [], '', [referencing])
+            block = new AstBlock(node.id, node.id, 'Logic', [], '', [referencing])
         } else if (node.type === 'Loop') {
             const condition = node.inputs[0]?.socket?.connection
             if (condition === undefined) {
@@ -94,7 +95,7 @@ export class SgToken {
                 name: condition.node,
                 type: 'Variable'
             }
-            block = new AstBlock(node.id,node.id, 'Loop', [], '', [referencing])
+            block = new AstBlock(node.id, node.id, 'Loop', [], '', [referencing])
         } else if (node.type === 'Function') {
             const condition = node.inputs[0]?.socket?.connection
             if (condition === undefined) {
@@ -105,7 +106,7 @@ export class SgToken {
                 name: condition.node,
                 type: 'Variable'
             }
-            block = new AstBlock(node.id,node.id, 'Function', [], '', [referencing])
+            block = new AstBlock(node.id, node.id, 'Function', [], '', [referencing])
         } else if (node.type === 'CallFunction') {
             const callFunc = node as BuiltInFunc
             const args: ReferencingValue[] = []
@@ -123,11 +124,11 @@ export class SgToken {
                 })
             }
 
-            block = new AstBlock(node.id,callFunc.id, 'CallFunction', [], callFunc.funcName, args, callFunc.funType)
+            block = new AstBlock(node.id, callFunc.id, 'CallFunction', [], callFunc.funcName, args, callFunc.funType)
 
             // attributes create temp variable
             for (const attr of callFunc.attributes) {
-                const tempVar = new StackValue(node.id,callFunc.id + attr.name, attr.type, attr.value, path, 'temp')
+                const tempVar = new StackValue(node.id, callFunc.id + attr.name, attr.type, attr.value, path, 'temp')
                 block.args?.push({
                     type: 'Variable',
                     name: tempVar.id
@@ -152,11 +153,11 @@ export class SgToken {
                     type: 'Variable',
                     name: input
                 }
-                block = new AstBlock(node.id,node.id, 'SetVariable', [], undefined, [vari, inputVari], undefined)
-                const temp = new StackValue(node.id,node.id, 'referencing', SgToken.variableToType(val, 'referencing'), path, 'temp')
+                block = new AstBlock(node.id, node.id, 'SetVariable', [], undefined, [vari, inputVari], undefined)
+                const temp = new StackValue(node.id, node.id, 'referencing', SgToken.variableToType(val, 'referencing'), path, 'temp')
                 block.body?.push(temp)
             } else {
-                block = new StackValue(node.id,node.id, 'referencing', SgToken.variableToType(val, 'referencing'), path)
+                block = new StackValue(node.id, node.id, 'referencing', SgToken.variableToType(val, 'referencing'), path)
             }
 
         } else if (node.type === 'Variable') {
@@ -168,11 +169,11 @@ export class SgToken {
             }
             const input = varNode.inputs[1]?.socket?.connection
             if (input) {
-                block = new StackValue(node.id,node.id, 'referencing', input.node, path)
+                block = new StackValue(node.id, node.id, 'referencing', input.node, path)
             } else {
                 const val = varNode.getAttribute('value')?.value
                 const defaultValue = val ? val : varNode.getDefaultValue()
-                block = new StackValue(node.id,node.id, t as VariableType, SgToken.variableToType(defaultValue, t as VariableType), path)
+                block = new StackValue(node.id, node.id, t as VariableType, SgToken.variableToType(defaultValue, t as VariableType), path)
             }
         } else if (node.type === 'BinaryOperator') {
             const express = node as BinaryOperatorNode
@@ -238,7 +239,59 @@ export class SgToken {
                 node.setNodeErr()
                 throw new VmErr(node.id, `${node.titleContent}->type not found`)
             }
-            block = new AstToken(node.id,node.id, 'BinaryExpression', operatorType as OperatorType, input1, input2)
+            block = new AstToken(node.id, node.id, 'BinaryExpression', operatorType as OperatorType, input1, input2)
+        } else if (node.type === 'UnaryOperator') {
+            const express = node as UnaryOperatorNode
+            const socket1 = express.inputs[1]
+            if(!socket1) {
+                throw new VmErr(node.id, `${node.titleContent}->input node not found`)
+            }
+            const leftNode1 = SgToken.findNode(socket1?.socket?.connection?.node)
+
+            if (!leftNode1) {
+                node.setNodeErr()
+                throw new VmErr(node.id, `${node.titleContent}->${socket1.key} node not found`)
+            }
+            let input1: ReferencingValue = {
+                type: 'Expression',
+                name: leftNode1?.id
+            }
+            if (leftNode1.type === 'Variable') {
+                input1 = {
+                    type: 'Variable',
+                    name: leftNode1.id
+                }
+            } else if (leftNode1.type === 'Referencing') {
+                const referencingNode = leftNode1 as ReferencingNode
+                const vari = referencingNode.getAttribute('reference')?.value
+                if (vari === undefined) {
+                    node.setNodeErr()
+                    throw new VmErr(referencingNode.id, `${referencingNode.titleContent} value not found`)
+                }
+                input1 = {
+                    type: 'Variable',
+                    name: vari
+                }
+            }
+
+            const input2Var = express.getConstant()
+            if (input2Var === undefined) {
+                throw new VmErr(express.id, `${express.titleContent} constant not found`)
+            }
+
+            const variable = new StackValue(express.id, express.id + '_constant', 'number', input2Var, '', 'constant')
+            tokens.push(variable)
+            let input2: ReferencingValue = {
+                type: 'Expression',
+                name: variable.id
+            }
+
+            const operatorType = express.getOperatorType()
+            if (operatorType === undefined) {
+                node.setNodeErr()
+                throw new VmErr(node.id, `${node.titleContent}->type not found`)
+            }
+            block = new AstToken(node.id, node.id, 'BinaryExpression', operatorType as OperatorType, input1, input2)
         }
 
         return block
