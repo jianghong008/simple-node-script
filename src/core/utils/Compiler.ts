@@ -1,5 +1,4 @@
 import { SvnToken } from "../svm/VM"
-import { postData } from "./api"
 
 export enum CompilerStatus {
     Running,
@@ -60,16 +59,10 @@ export class Compiler {
     }
 
     public execute(tokens: SvnToken[]) {
-        // if (!this.wsConnected) {
-        //     throw new Error('ws not connected')
-        // }
-        const data: CompilerData = {
-            data:tokens,
-            cmd: CompilerCmd.Compile
+        if (!this.wsConnected) {
+            throw new Error('ws not connected')
         }
-        // this.status = CompilerStatus.Running
-        // this.ws?.send(JSON.stringify(data))
-
-        postData('http://127.0.0.1:8090/compile', data)
+        this.status = CompilerStatus.Running
+        this.ws?.send(JSON.stringify(tokens))
     }
 }
