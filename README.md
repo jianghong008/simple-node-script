@@ -4,10 +4,10 @@
 npm i
 npm run dev
 ```
-由ts+pixijs制作
+编辑器 ts+pixijs，执行器 rust
 ##### 计划
 - [x] js解释器，当前仅web端运行
-- [ ] node扩展，node控制台程序
-- [ ] rust解释器，脱离二次虚拟机
+- [x] rust执行器，待完善
+- [ ] electron包装
 ##### 截图
 ![gs-view.png](data/gs-view.png)
