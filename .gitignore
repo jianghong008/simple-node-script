@@ -22,3 +22,4 @@ temp
 *.njsproj
 *.sln
 *.sw?
+out
