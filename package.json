@@ -9,7 +9,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "electron": "electron .",
-    "ec":"tsc src/electron/main.ts src/electron/preload.ts --outDir out --module nodenext"
+    "ec":"tsc src/electron/main.ts src/electron/preload.cts --outDir out --module nodenext"
   },
   "devDependencies": {
     "electron": "^30.0.9",

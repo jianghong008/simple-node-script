@@ -7,15 +7,18 @@ import { NodeUtils } from '../utils/NodeUtils';
 import { ComUtils } from '../utils/com';
 import { $t } from '../../plugins/i18n';
 import { SgToken } from '../svm/SgToken';
-import { Compiler, CompilerStatus } from '../utils/Compiler';
-
+export enum CompilerStatus {
+    Running,
+    Stop,
+    Ready,
+}
 export class MainUi {
     public view: PIXI.Container
     private runBtn?: UI.Button
-    private runTimer?: number
+    private runTimer: any
     private logBox: UI.ScrollBox
     private bottomBox: UI.List
-    private compiler:Compiler = new Compiler()
+    private status: CompilerStatus = CompilerStatus.Stop
     constructor() {
         this.view = new PIXI.Container()
         this.logBox = new UI.ScrollBox({
@@ -43,7 +46,6 @@ export class MainUi {
         this.createTopActions()
         this.createBottomActions()
 
-        this.compiler.init()
     }
     private registerConsole() {
         window.console.log = (msg, data) => {
@@ -143,7 +145,7 @@ export class MainUi {
     }
 
     private update() {
-        if (this.compiler.status === CompilerStatus.Stop) {
+        if (this.status === CompilerStatus.Stop) {
             clearInterval(this.runTimer)
             if (!this.runBtn) {
                 return
@@ -240,12 +242,12 @@ export class MainUi {
         ComUtils.webDownload(json)
     }
     private async runScript() {
-        if (this.compiler.status === CompilerStatus.Running) {
+        if (this.status === CompilerStatus.Running) {
             return
         }
         this.runTimer = setInterval(this.update.bind(this), 100)
         const tokens = SgToken.create(DataBus.nodes)
-        this.compiler.execute(tokens)
+        window.compiler.execute(tokens)
     }
     private async newNode(t: string) {
         try {

@@ -23,3 +23,4 @@ temp
 *.sln
 *.sw?
 out
+bin/
