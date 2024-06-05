@@ -24,3 +24,4 @@ temp
 *.sw?
 out
 bin/
+*.tp
