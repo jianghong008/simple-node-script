@@ -41,11 +41,28 @@ export class MainUi {
         this.init()
     }
     private async init() {
-        // this.registerConsole()
+        this.registerConsole()
         await this.preload()
         this.createTopActions()
         this.createBottomActions()
 
+        window.compiler.onExecuteMessage(this.onExecuteMessage.bind(this))
+        window.compiler.onExecuteDone(this.onExecuteDone.bind(this))
+        window.compiler.resizeEditor(this.resizeEditor.bind(this))
+
+        window.onresize = () => {
+            this.resizeEditor()
+        }
+
+    }
+    private onExecuteMessage(msg:string){
+        console.log('',msg)
+    }
+    private onExecuteDone(){
+        this.status = CompilerStatus.Stop
+    }
+    private resizeEditor() {
+        this.resetDebug()
     }
     private registerConsole() {
         window.console.log = (msg, data) => {
@@ -124,6 +141,18 @@ export class MainUi {
 
         const debugBtn = this.createDebugBtn()
         this.bottomBox.addChild(debugBtn.view)
+    }
+
+    private resetDebug(){
+        this.logBox.width = DataBus.app.screen.width
+        if (!this.logBox.visible) {
+            this.bottomBox.y = DataBus.app.screen.height - 60
+            this.logBox.removeItems()
+            this.logBox.scrollTo(0)
+        } else {
+            this.bottomBox.y = DataBus.app.screen.height - 60 - this.logBox.height
+            this.logBox.y = DataBus.app.screen.height - this.logBox.height
+        }
     }
 
     private createDebugBtn() {
@@ -245,6 +274,7 @@ export class MainUi {
         if (this.status === CompilerStatus.Running) {
             return
         }
+        this.status = CompilerStatus.Running
         this.runTimer = setInterval(this.update.bind(this), 100)
         const tokens = SgToken.create(DataBus.nodes)
         window.compiler.execute(tokens)

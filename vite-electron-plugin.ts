@@ -16,5 +16,12 @@ export const viteElectronPlugin = () => ({
             server.close()
             console.log('close electron')
         })
+
+        win.stdout.on('data', (data) => {
+            console.log(`electron stdout: ${data}`)
+        })
+        win.stderr.on('data', (data) => {
+            console.log(`electron stderr: ${data}`)
+        })
     },
   })

@@ -2,7 +2,9 @@ import { contextBridge,ipcRenderer } from 'electron'
 
 contextBridge.exposeInMainWorld('compiler', {
     execute,
-    onMessage,
+    onExecuteMessage,
+    onExecuteDone,
+    resizeEditor,
 })
 
 contextBridge.exposeInMainWorld('editor', {
@@ -15,10 +17,17 @@ function execute(tokens: any[]) {
     console.log(tokens)
 }
 
-function onMessage(e: MessageEvent) {
-
+function onExecuteMessage(callback:(msg:string)=>void) {
+    ipcRenderer.on('onExecuteMessage', (_event, value) => callback(value))
 }
 
+function onExecuteDone(callback:()=>void) {
+    ipcRenderer.on('onExecuteDone', (_event) => callback())
+}
+
+function resizeEditor(callback:()=>void) {
+    ipcRenderer.on('resizeEditor',()=>callback())
+}
 
 function openFile() {
 
