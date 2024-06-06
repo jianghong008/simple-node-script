@@ -5,7 +5,7 @@ import { Select } from '@pixi/ui';
 import { DataBus } from '../utils/DataBus';
 import { $t } from '../../plugins/i18n';
 import { InputBox } from './com/InputBox';
-
+import * as UI from '@pixi/ui'
 export class BaseNode {
     public id = ''
     public title: PIXI.Text
@@ -130,6 +130,24 @@ export class BaseNode {
         this.createInputs()
         this.createOutputs()
     }
+    private onwheel(e: PIXI.FederatedWheelEvent) {
+        if (DataBus.input === document.activeElement) {
+            return
+        }
+        if (e.target instanceof UI.ScrollBox || e.target instanceof UI.Select) {
+            return
+        }
+        const mousePos = { x: e.screenX, y: e.screenY };
+        const mousePosInContainer = DataBus.nodesBox.toLocal(mousePos);
+        const scaleFactor = e.deltaY > 0 ? 1.1 : 0.9;
+
+        DataBus.nodesBox.scale.x *= scaleFactor;
+        DataBus.nodesBox.scale.y *= scaleFactor;
+
+        const newMousePosInContainer = DataBus.nodesBox.toLocal(mousePos);
+        DataBus.nodesBox.position.x += (newMousePosInContainer.x - mousePosInContainer.x) * DataBus.nodesBox.scale.x;
+        DataBus.nodesBox.position.y += (newMousePosInContainer.y - mousePosInContainer.y) * DataBus.nodesBox.scale.y;
+    }
     private onpointerup() {
         this.view.cursor = 'default'
     }
@@ -199,6 +217,7 @@ export class BaseNode {
         this.view.onpointerup = this.onpointerup.bind(this)
         this.view.onpointerout = this.onpointerout.bind(this)
         this.view.onpointertap = this.onpointertap.bind(this)
+        this.view.onwheel = this.onwheel.bind(this)
         this.initEvents()
     }
 
@@ -561,7 +580,7 @@ export class BaseNode {
                 radius: 4
             }
         });
-        
+
         select.x = x
         select.y = y
         select.onpointerenter = () => {

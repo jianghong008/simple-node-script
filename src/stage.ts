@@ -3,6 +3,7 @@ import { EventType, GEvent } from './core/utils/GEvent';
 import { DataBus } from './core/utils/DataBus';
 import { MainUi } from './core/ui/MainUi';
 import { MainNode } from './core/nodes/MainNode';
+
 export class Stage {
     public app: PIXI.Application;
     private stagePointer = {
@@ -63,7 +64,6 @@ export class Stage {
         }
 
         this.app.canvas.onwheel = (e) => {
-            this.onwheel(e)
             GEvent.emit(EventType.Wheel, e, this)
         }
 
@@ -78,21 +78,7 @@ export class Stage {
         DataBus.nodesBox.x += e.movementX
         DataBus.nodesBox.y += e.movementY
     }
-    private onwheel(e: WheelEvent) {
-        if (DataBus.input === document.activeElement) {
-            return
-        }
-        const mousePos = { x: e.screenX, y: e.screenY };
-        const mousePosInContainer = DataBus.nodesBox.toLocal(mousePos);
-        const scaleFactor = e.deltaY > 0 ? 1.1 : 0.9;
-
-        DataBus.nodesBox.scale.x *= scaleFactor;
-        DataBus.nodesBox.scale.y *= scaleFactor;
-
-        const newMousePosInContainer = DataBus.nodesBox.toLocal(mousePos);
-        DataBus.nodesBox.position.x += (newMousePosInContainer.x - mousePosInContainer.x) * DataBus.nodesBox.scale.x;
-        DataBus.nodesBox.position.y += (newMousePosInContainer.y - mousePosInContainer.y) * DataBus.nodesBox.scale.y;
-    }
+    
     async init() {
         this.intEvents()
         this.app.ticker.add(this.update.bind(this))

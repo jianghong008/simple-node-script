@@ -19,6 +19,7 @@ export class MainUi {
     private logBox: UI.ScrollBox
     private bottomBox: UI.List
     private status: CompilerStatus = CompilerStatus.Stop
+    private startTime = 0
     constructor() {
         this.view = new PIXI.Container()
         this.logBox = new UI.ScrollBox({
@@ -41,7 +42,7 @@ export class MainUi {
         this.init()
     }
     private async init() {
-        this.registerConsole()
+        // this.registerConsole()
         await this.preload()
         this.createTopActions()
         this.createBottomActions()
@@ -55,11 +56,13 @@ export class MainUi {
         }
 
     }
-    private onExecuteMessage(msg:string){
-        console.log('',msg)
+    private onExecuteMessage(msg: string) {
+        this.log(msg)
     }
-    private onExecuteDone(){
+    private onExecuteDone() {
         this.status = CompilerStatus.Stop
+        const time = Date.now() - this.startTime
+        this.log(`Done ${time}ms`)
     }
     private resizeEditor() {
         DataBus.app.resize()
@@ -144,14 +147,14 @@ export class MainUi {
         this.bottomBox.addChild(debugBtn.view)
     }
 
-    private resetDebug(){
+    private resetDebug() {
         this.logBox.width = DataBus.app.screen.width
         if (!this.logBox.visible) {
             this.bottomBox.y = DataBus.app.screen.height - 60
             this.logBox.removeItems()
             this.logBox.scrollTo(0)
         } else {
-            this.bottomBox.y = DataBus.app.screen.height - 60 - this.logBox.height 
+            this.bottomBox.y = DataBus.app.screen.height - 60 - this.logBox.height
         }
         this.logBox.y = DataBus.app.screen.height - this.logBox.height
     }
@@ -277,8 +280,14 @@ export class MainUi {
         }
         this.status = CompilerStatus.Running
         this.runTimer = setInterval(this.update.bind(this), 100)
-        const tokens = SgToken.create(DataBus.nodes)
-        window.compiler.execute(tokens)
+        try {
+            const tokens = SgToken.create(DataBus.nodes)
+            this.startTime = Date.now()
+            window.compiler.execute(tokens)
+        } catch (error) {
+            this.status = CompilerStatus.Stop
+            this.log(error)
+        }
     }
     private async newNode(t: string) {
         try {
