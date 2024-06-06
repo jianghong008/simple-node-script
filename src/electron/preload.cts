@@ -14,7 +14,6 @@ contextBridge.exposeInMainWorld('editor', {
 
 function execute(tokens: any[]) {
     ipcRenderer.invoke('execute', tokens)
-    console.log(tokens)
 }
 
 function onExecuteMessage(callback:(msg:string)=>void) {

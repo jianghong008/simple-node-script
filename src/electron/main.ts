@@ -72,8 +72,11 @@ async function execute(e:Electron.IpcMainInvokeEvent,token: SvnToken[]) {
         shell: true
     })
     vm.stdout.on('data', (data) => {
-        e.senderFrame.send('onExecuteMessage',data.toString())
-        console.log(data.toString())
+        const msg = data.toString()
+        if(!msg){
+            return
+        }
+        e.senderFrame.send('onExecuteMessage',msg)
     })
     vm.on('close',()=>{
         e.senderFrame.send('onExecuteDone')

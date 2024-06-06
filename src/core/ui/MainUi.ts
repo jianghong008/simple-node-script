@@ -62,6 +62,7 @@ export class MainUi {
         this.status = CompilerStatus.Stop
     }
     private resizeEditor() {
+        DataBus.app.resize()
         this.resetDebug()
     }
     private registerConsole() {
@@ -83,7 +84,7 @@ export class MainUi {
         g.fill(0x221133)
         box.addChild(g)
         box.addChild(new PIXI.Text({
-            text: `${date} ${String(msg)}`,
+            text: `${date}: \t ${String(msg)}`,
             style: {
                 fontSize: 12,
                 fill: 0xffffff,
@@ -150,9 +151,9 @@ export class MainUi {
             this.logBox.removeItems()
             this.logBox.scrollTo(0)
         } else {
-            this.bottomBox.y = DataBus.app.screen.height - 60 - this.logBox.height
-            this.logBox.y = DataBus.app.screen.height - this.logBox.height
+            this.bottomBox.y = DataBus.app.screen.height - 60 - this.logBox.height 
         }
+        this.logBox.y = DataBus.app.screen.height - this.logBox.height
     }
 
     private createDebugBtn() {
