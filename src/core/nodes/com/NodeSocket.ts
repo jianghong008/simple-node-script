@@ -4,10 +4,6 @@ import { EventType, GEvent } from "../../utils/GEvent";
 import { BaseNode } from "../BaseNode"
 import * as PIXI from 'pixi.js';
 
-interface SocketConnection {
-    node: string
-    socket: string
-}
 export class NodeSocket {
     public key: string
     public connection?: SocketConnection

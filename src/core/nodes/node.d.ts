@@ -8,6 +8,11 @@ interface SocketObject {
     }
 }
 
+interface SocketConnection {
+    node: string
+    socket: string
+}
+
 interface NodeAttribute {
     name: string
     value: string

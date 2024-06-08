@@ -7,32 +7,26 @@ import { NodeUtils } from '../utils/NodeUtils';
 import { ComUtils } from '../utils/com';
 import { $t } from '../../plugins/i18n';
 import { SgToken } from '../svm/SgToken';
+import { Queue } from '../utils/Queue';
 export enum CompilerStatus {
     Running,
     Stop,
     Ready,
 }
+
 export class MainUi {
     public view: PIXI.Container
     private runBtn?: UI.Button
     private runTimer: any
-    private logBox: UI.ScrollBox
+    private logBox: HTMLDivElement
     private bottomBox: UI.List
     private status: CompilerStatus = CompilerStatus.Stop
     private startTime = 0
     constructor() {
         this.view = new PIXI.Container()
-        this.logBox = new UI.ScrollBox({
-            background: 0X111122,
-            width: DataBus.app.screen.width,
-            height: 200,
-            elementsMargin: 2,
-            padding: 4,
-            globalScroll: false
-        })
-        this.logBox.visible = false
-        this.logBox.y = DataBus.app.screen.height - 200
-        this.view.addChild(this.logBox)
+        this.logBox = document.createElement('div')
+        document.body.appendChild(this.logBox)
+        this.logBox.className = 'log-box'
         this.view.zIndex = 1000
         this.bottomBox = new UI.List({
             type: 'horizontal',
@@ -42,7 +36,6 @@ export class MainUi {
         this.init()
     }
     private async init() {
-        // this.registerConsole()
         await this.preload()
         this.createTopActions()
         this.createBottomActions()
@@ -55,49 +48,67 @@ export class MainUi {
             this.resizeEditor()
         }
 
+        DataBus.app.canvas.addEventListener('dragover', (e) => {
+            e.preventDefault()
+        })
+        DataBus.app.canvas.addEventListener('drop', (e) => {
+            e.preventDefault()
+            this.onDrop(e)
+        })
+
+    }
+    async onDrop(e: DragEvent) {
+        if (!e.dataTransfer?.files[0]) {
+            return
+        }
+        try {
+            const data = await ComUtils.readFile(e.dataTransfer.files[0])
+            DataBus.nodesBox.removeChildren()
+            const script = await SgScript.decode(data)
+            DataBus.nodes = script.nodes
+            DataBus.nodesBox.x = script.data.stage.x
+            DataBus.nodesBox.y = script.data.stage.y
+            DataBus.nodesBox.scale.set(script.data.stage.scale)
+            DataBus.nodes.forEach(node => {
+                DataBus.nodesBox.addChild(node.view)
+            })
+        } catch (error) {
+            this.queueLog(error)
+        }
     }
     private onExecuteMessage(msg: string) {
-        this.log(msg)
+        this.queueLog(msg)
     }
     private onExecuteDone() {
         this.status = CompilerStatus.Stop
         const time = Date.now() - this.startTime
-        this.log(`Done ${time}ms`)
+        this.queueLog(`Done ${time}ms`)
     }
     private resizeEditor() {
         DataBus.app.resize()
         this.resetDebug()
     }
-    private registerConsole() {
-        window.console.log = (msg, data) => {
-            this.log(`${msg} ${data}`)
-        }
-        window.console.error = (err) => {
-            this.log(err.message)
-        }
+
+    private queueLog(msg: any) {
+        const date = ComUtils.formatTime(Date.now())
+        const log = `<span class="log-date">${date}</span> <pre class="log-msg">${ComUtils.encodeHtml(msg)}</pre>`
+        Queue.push({
+            func: this.log.bind(this),
+            args: [log]
+        })
+    }
+    private setLogVisible(visible: boolean) {
+        this.logBox.style.display = visible ? 'block' : 'none'
+    }
+    private getLogVisible() {
+        return this.logBox.style.display == 'block'
     }
     private log(msg: any) {
-        if (this.logBox.visible == false) {
+        if (this.getLogVisible() == false) {
             return
         }
-        const date = ComUtils.formatTime(Date.now())
-        const box = new PIXI.Container()
-        const g = new PIXI.Graphics()
-        g.rect(0, 0, this.logBox.width, 20)
-        g.fill(0x221133)
-        box.addChild(g)
-        box.addChild(new PIXI.Text({
-            text: `${date}: \t ${String(msg)}`,
-            style: {
-                fontSize: 12,
-                fill: 0xffffff,
-                wordWrap: true,
-                wordWrapWidth: this.logBox.width,
-                breakWords: true
-            }
-        }))
-        this.logBox.addItem(box)
-        this.logBox.scrollTo(this.logBox.items.length - 1)
+        this.logBox.innerHTML = `${this.logBox.innerHTML}${msg}`
+        this.logBox.scrollTop = this.logBox.scrollHeight
     }
     private async preload() {
         await PIXI.Assets.load('/ui/open.svg')
@@ -105,7 +116,7 @@ export class MainUi {
         await PIXI.Assets.load('/ui/running.svg')
         await PIXI.Assets.load('/ui/run.svg')
         await PIXI.Assets.load('/ui/add.svg')
-        await PIXI.Assets.load('/ui/debug.svg')
+        await PIXI.Assets.load('/ui/teminal.svg')
     }
     private async createTopActions() {
 
@@ -139,8 +150,8 @@ export class MainUi {
 
     private createBottomActions() {
 
-        this.bottomBox.x = 10
-        this.bottomBox.y = DataBus.app.screen.height - 60
+        this.bottomBox.x = DataBus.app.screen.width - this.bottomBox.width
+        this.bottomBox.y = 0
         this.view.addChild(this.bottomBox)
 
         const debugBtn = this.createDebugBtn()
@@ -148,30 +159,32 @@ export class MainUi {
     }
 
     private resetDebug() {
-        this.logBox.width = DataBus.app.screen.width
-        if (!this.logBox.visible) {
-            this.bottomBox.y = DataBus.app.screen.height - 60
-            this.logBox.removeItems()
-            this.logBox.scrollTo(0)
+        if (!this.getLogVisible()) {
+            this.bottomBox.x = DataBus.app.screen.width - this.bottomBox.width
+            this.logBox.innerHTML = ''
+            this.logBox.scrollTo({
+                top: 0
+            })
         } else {
-            this.bottomBox.y = DataBus.app.screen.height - 60 - this.logBox.height
+            this.bottomBox.x = DataBus.app.screen.width - this.bottomBox.width
         }
-        this.logBox.y = DataBus.app.screen.height - this.logBox.height
     }
 
     private createDebugBtn() {
-        const bg = PIXI.Texture.from('/ui/debug.svg')
+        const bg = PIXI.Texture.from('/ui/teminal.svg')
         const debugBtn = new UI.Button(new PIXI.Sprite(bg))
         debugBtn.view.width = 30
         debugBtn.view.height = 30
         debugBtn.onPress.connect(() => {
-            this.logBox.visible = !this.logBox.visible
-            if (!this.logBox.visible) {
-                this.bottomBox.y = DataBus.app.screen.height - 60
-                this.logBox.removeItems()
-                this.logBox.scrollTo(0)
+            this.setLogVisible(!this.getLogVisible())
+            if (!this.getLogVisible()) {
+                this.bottomBox.x = DataBus.app.screen.width - this.bottomBox.width
+                this.logBox.innerHTML = ''
+                this.logBox.scrollTo({
+                    top: 0
+                })
             } else {
-                this.bottomBox.y = DataBus.app.screen.height - 60 - this.logBox.height
+                this.bottomBox.x = DataBus.app.screen.width - this.bottomBox.width
             }
         })
         return debugBtn
@@ -249,7 +262,7 @@ export class MainUi {
         })
         const scrollBox = new UI.ScrollBox({
             background: 0x3f51b5,
-            width: 200,
+            width: 400,
             height: 300,
             padding: 5,
             items: btns.map(btn => btn.view),
@@ -283,10 +296,11 @@ export class MainUi {
         try {
             const tokens = SgToken.create(DataBus.nodes)
             this.startTime = Date.now()
+            console.log(tokens)
             window.compiler.execute(tokens)
         } catch (error) {
             this.status = CompilerStatus.Stop
-            this.log(error)
+            this.queueLog(error)
         }
     }
     private async newNode(t: string) {
@@ -312,16 +326,20 @@ export class MainUi {
         }
     }
     private async loadScript() {
-        const data = await ComUtils.webOpenFile()
-        DataBus.nodesBox.removeChildren()
-        const script = await SgScript.decode(data)
-        DataBus.nodes = script.nodes
-        DataBus.nodesBox.x = script.data.stage.x
-        DataBus.nodesBox.y = script.data.stage.y
-        DataBus.nodesBox.scale.set(script.data.stage.scale)
-        DataBus.nodes.forEach(node => {
-            DataBus.nodesBox.addChild(node.view)
-        })
+        try {
+            const data = await ComUtils.webOpenFile()
+            DataBus.nodesBox.removeChildren()
+            const script = await SgScript.decode(data)
+            DataBus.nodes = script.nodes
+            DataBus.nodesBox.x = script.data.stage.x
+            DataBus.nodesBox.y = script.data.stage.y
+            DataBus.nodesBox.scale.set(script.data.stage.scale)
+            DataBus.nodes.forEach(node => {
+                DataBus.nodesBox.addChild(node.view)
+            })
+        } catch (error) {
+            this.queueLog(error)
+        }
 
     }
 }

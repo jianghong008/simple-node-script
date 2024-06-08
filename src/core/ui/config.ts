@@ -4,6 +4,7 @@ export const TopMenus = {
         'Logic','Loop','Invert','Referencing',
         'BinaryOperator','UnaryOperator','Variable','Sqrt',
         'Print','Length','Random','Abs','Floor','Ceil',
-        'Round','Sleep','GetAttr',
+        'Round','Sleep','GetAttr','ReadFileToString','WriteStringToFile',
+        'WebRequest',
     ]
 }

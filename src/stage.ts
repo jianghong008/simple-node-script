@@ -23,6 +23,7 @@ export class Stage {
             depth: true,
 
         }).then(() => {
+            
             div.appendChild(this.app.canvas)
             DataBus.nodesBox = new PIXI.Container()
             this.app.stage.addChild(DataBus.nodesBox)

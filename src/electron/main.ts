@@ -36,8 +36,7 @@ function createWindow() {
     win.on('unmaximize',resizeEditot)
     win.on('show',resizeEditot)
     win.on('enter-full-screen',resizeEditot)
-    win.on('leave-full-screen',resizeEditot)
-    
+    win.on('leave-full-screen',resizeEditot) 
 }
 
 app.on('window-all-closed', () => {
@@ -64,7 +63,7 @@ function initEvents(){
 }
 
 async function execute(e:Electron.IpcMainInvokeEvent,token: SvnToken[]) {
-    const vmPath = path.join(app.getAppPath(), 'bin/sgvm.exe')
+    const vmPath = path.join(app.getAppPath(), 'bin/sgs-vm.exe')
     const tempPath = path.join(app.getAppPath(), 'data/temp.tp')
     const data = JSON.stringify(token)
     writeFileSync(tempPath,data)

@@ -110,26 +110,10 @@ export class SgToken {
         } else if (node.type === 'CallFunction') {
             const callFunc = node as BuiltInFunc
             const args: ReferencingValue[] = []
-            for (const input of callFunc.inputs) {
-                if (input.key === 'line') {
-                    continue
-                }
-                const parms = input.socket.connection
-                if (!parms) {
-                    continue
-                }
-                args.push({
-                    type: 'Variable',
-                    name: parms.node
-                })
-            }
-
-            block = new AstBlock(node.id, callFunc.id, 'CallFunction', [], callFunc.funcName, args, callFunc.funType)
-
             // attributes create temp variable
             for (const attr of callFunc.attributes) {
                 const tempVar = new StackValue(node.id, callFunc.id + attr.name, attr.type, attr.value, path, 'temp')
-                block.args?.push({
+                args.push({
                     type: 'Variable',
                     name: tempVar.id
                 })
@@ -139,6 +123,41 @@ export class SgToken {
                     tokens.push(tempVar)
                 }
             }
+            // inputs
+            for (const input of callFunc.inputs) {
+                if (input.key === 'line') {
+                    continue
+                }
+                const parms = input.socket?.connection
+                if (!parms) {
+                    continue
+                }
+                // referencing
+                const inputNode = SgToken.findNode(parms.node)
+                if(!inputNode) {
+                    node.setNodeErr()
+                    throw new VmErr(node.id, `${node.titleContent}->${parms.node} input not found`)
+                }
+                if(inputNode.type === 'Referencing') {
+                    const realVal = inputNode.getAttribute('reference')?.value
+                    if(!realVal) {
+                        node.setNodeErr()
+                        throw new VmErr(node.id, `${node.titleContent}->${parms.node} reference value not set`)
+                    }
+                    args.push({
+                        type: 'Variable',
+                        name: realVal
+                    })
+                }else{
+                    args.push({
+                        type: 'Variable',
+                        name: parms.node
+                    })
+                }
+                
+            }
+
+            block = new AstBlock(node.id, callFunc.id, 'CallFunction', [], callFunc.funcName, args, callFunc.funType)
         } else if (node.type === 'Referencing') {
             const varNode = node as ReferencingNode
             const val = varNode.getAttribute('reference')?.value
