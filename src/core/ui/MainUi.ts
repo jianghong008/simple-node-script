@@ -73,7 +73,7 @@ export class MainUi {
                 DataBus.nodesBox.addChild(node.view)
             })
         } catch (error) {
-            this.queueLog(error)
+            this.queueLog(String(error))
         }
     }
     private onExecuteMessage(msg: string) {
@@ -89,9 +89,14 @@ export class MainUi {
         this.resetDebug()
     }
 
-    private queueLog(msg: any) {
+    private queueLog(msg: string) {
         const date = ComUtils.formatTime(Date.now())
-        const log = `<span class="log-date">${date}</span> <pre class="log-msg">${ComUtils.encodeHtml(msg)}</pre>`
+        // translate
+        const temp = msg.split(/\s+/)
+        for(let i = 0; i < temp.length; i++) {
+            temp[i] = $t(temp[i])||temp[i]
+        }
+        const log = `<span class="log-date">${date}</span> <pre class="log-msg">${ComUtils.encodeHtml(temp.join(' '))}</pre>`
         Queue.push({
             func: this.log.bind(this),
             args: [log]
@@ -143,34 +148,29 @@ export class MainUi {
 
         this.runBtn = await this.createRunBtn()
 
-        list.addChild(loadBtn.view, saveBtn.view, newBtn, this.runBtn.view)
+        this.view.addChild(this.bottomBox)
 
+        const logBtn = this.createLogBtn()
+
+        list.addChild(loadBtn.view, saveBtn.view, newBtn, this.runBtn.view,logBtn.view)
 
     }
 
     private createBottomActions() {
 
-        this.bottomBox.x = DataBus.app.screen.width - this.bottomBox.width
-        this.bottomBox.y = 0
-        this.view.addChild(this.bottomBox)
-
-        const debugBtn = this.createDebugBtn()
-        this.bottomBox.addChild(debugBtn.view)
+        
     }
 
     private resetDebug() {
         if (!this.getLogVisible()) {
-            this.bottomBox.x = DataBus.app.screen.width - this.bottomBox.width
             this.logBox.innerHTML = ''
             this.logBox.scrollTo({
                 top: 0
             })
-        } else {
-            this.bottomBox.x = DataBus.app.screen.width - this.bottomBox.width
         }
     }
 
-    private createDebugBtn() {
+    private createLogBtn() {
         const bg = PIXI.Texture.from('/ui/teminal.svg')
         const debugBtn = new UI.Button(new PIXI.Sprite(bg))
         debugBtn.view.width = 30
@@ -300,7 +300,7 @@ export class MainUi {
             window.compiler.execute(tokens)
         } catch (error) {
             this.status = CompilerStatus.Stop
-            this.queueLog(error)
+            this.queueLog(String(error))
         }
     }
     private async newNode(t: string) {
@@ -338,7 +338,7 @@ export class MainUi {
                 DataBus.nodesBox.addChild(node.view)
             })
         } catch (error) {
-            this.queueLog(error)
+            this.queueLog(String(error))
         }
 
     }

@@ -11,15 +11,15 @@ export class VariableNode extends BaseNode {
 
         this.addAttribute({
             name: "type",
-            value: 'number',
-            type: 'number',
-            options: ['number', 'string', 'boolean', 'array']
+            value: 'string',
+            type: 'string',
+            options: ['string','number', 'boolean', 'array']
         })
 
         this.addAttribute({
             name: "value",
-            value: '0',
-            type: 'number',
+            value: '',
+            type: 'string',
             options: undefined
         })
         this.onAttibuteChange = this.onAttrChange.bind(this)

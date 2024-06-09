@@ -10,9 +10,9 @@ function createWindow() {
         height: 600,
         webPreferences: {
             preload: path.join(app.getAppPath(), 'out/preload.cjs'),
-        }
+        },
+        icon: path.join(app.getAppPath(), 'public/sgs-ico.ico'),
     })
-    win.webContents.openDevTools()
     win.removeMenu()
     if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === undefined) {
         const port = process.argv[2] ?? '5173'

@@ -22,6 +22,5 @@ temp
 *.njsproj
 *.sln
 *.sw?
-out
 bin/
 *.tp

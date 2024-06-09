@@ -6,8 +6,6 @@ export class WebRequestNode extends BuiltInFunc {
         super(name ? name : 'WebRequest');
         this.edit.out = false
         this.funcName = 'webRequest';
-        this.addInput({ key: 'url' })
-
         this.addAttribute({
             name: "method",
             value: "GET",
@@ -28,6 +26,15 @@ export class WebRequestNode extends BuiltInFunc {
             type: 'string',
             options: undefined
         })
+
+        this.addAttribute({
+            name: "timeout",
+            value: '10',
+            type: 'number',
+            options: undefined
+        })
+
+        this.addInput({ key: 'url' })
         this.addOutput({ key: 'output' })
         this.refresh()
     }
