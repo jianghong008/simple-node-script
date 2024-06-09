@@ -1,3 +1,4 @@
+import { AppComUtils } from "../uitls/com"
 
 export const I18n = {
     data: new Map<string, Map<string, string>>(),
@@ -18,8 +19,8 @@ export function setLang(lang: string) {
 }
 
 export async function loadCSV() {
-
-    const res = await fetch('/local/lang.csv')
+    const path = AppComUtils.getBasePath()+ 'local/lang.csv'
+    const res = await fetch(path)
     const rowRge = /\n(?=(?:[^"]*"[^"]*")*[^"]*$)/g
     const rows = (await res.text()).split(rowRge)
     const colRge = /,(?=(?:[^"]*"[^"]*")*[^"]*$)/g

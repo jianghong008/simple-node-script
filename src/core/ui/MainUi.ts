@@ -8,12 +8,13 @@ import { ComUtils } from '../utils/com';
 import { $t } from '../../plugins/i18n';
 import { SgToken } from '../svm/SgToken';
 import { Queue } from '../utils/Queue';
+import { AppComUtils } from '../../uitls/com';
 export enum CompilerStatus {
     Running,
     Stop,
     Ready,
 }
-
+const path = AppComUtils.getBasePath()
 export class MainUi {
     public view: PIXI.Container
     private runBtn?: UI.Button
@@ -93,8 +94,8 @@ export class MainUi {
         const date = ComUtils.formatTime(Date.now())
         // translate
         const temp = msg.split(/\s+/)
-        for(let i = 0; i < temp.length; i++) {
-            temp[i] = $t(temp[i])||temp[i]
+        for (let i = 0; i < temp.length; i++) {
+            temp[i] = $t(temp[i]) || temp[i]
         }
         const log = `<span class="log-date">${date}</span> <pre class="log-msg">${ComUtils.encodeHtml(temp.join(' '))}</pre>`
         Queue.push({
@@ -116,12 +117,13 @@ export class MainUi {
         this.logBox.scrollTop = this.logBox.scrollHeight
     }
     private async preload() {
-        await PIXI.Assets.load('/ui/open.svg')
-        await PIXI.Assets.load('/ui/save.svg')
-        await PIXI.Assets.load('/ui/running.svg')
-        await PIXI.Assets.load('/ui/run.svg')
-        await PIXI.Assets.load('/ui/add.svg')
-        await PIXI.Assets.load('/ui/teminal.svg')
+        
+        await PIXI.Assets.load(path + 'ui/open.svg')
+        await PIXI.Assets.load(path + 'ui/save.svg')
+        await PIXI.Assets.load(path + 'ui/running.svg')
+        await PIXI.Assets.load(path + 'ui/run.svg')
+        await PIXI.Assets.load(path + 'ui/add.svg')
+        await PIXI.Assets.load(path + 'ui/teminal.svg')
     }
     private async createTopActions() {
 
@@ -132,13 +134,13 @@ export class MainUi {
         })
         this.view.addChild(list)
 
-        const bg1 = PIXI.Texture.from('/ui/open.svg')
+        const bg1 = PIXI.Texture.from(path + 'ui/open.svg')
         const loadBtn = new UI.Button(new PIXI.Sprite(bg1))
         loadBtn.view.width = 30
         loadBtn.view.height = 30
         loadBtn.onPress.connect(this.loadScript.bind(this))
 
-        const bg2 = PIXI.Texture.from('/ui/save.svg')
+        const bg2 = PIXI.Texture.from(path + 'ui/save.svg')
         const saveBtn = new UI.Button(new PIXI.Sprite(bg2))
         saveBtn.view.width = 30
         saveBtn.view.height = 30
@@ -152,13 +154,13 @@ export class MainUi {
 
         const logBtn = this.createLogBtn()
 
-        list.addChild(loadBtn.view, saveBtn.view, newBtn, this.runBtn.view,logBtn.view)
+        list.addChild(loadBtn.view, saveBtn.view, newBtn, this.runBtn.view, logBtn.view)
 
     }
 
     private createBottomActions() {
 
-        
+
     }
 
     private resetDebug() {
@@ -171,7 +173,7 @@ export class MainUi {
     }
 
     private createLogBtn() {
-        const bg = PIXI.Texture.from('/ui/teminal.svg')
+        const bg = PIXI.Texture.from(path + 'ui/teminal.svg')
         const debugBtn = new UI.Button(new PIXI.Sprite(bg))
         debugBtn.view.width = 30
         debugBtn.view.height = 30
@@ -196,17 +198,17 @@ export class MainUi {
             if (!this.runBtn) {
                 return
             }
-            (this.runBtn.view as PIXI.Sprite).texture = PIXI.Texture.from('/ui/run.svg')
+            (this.runBtn.view as PIXI.Sprite).texture = PIXI.Texture.from(path + 'ui/run.svg')
         } else {
             if (!this.runBtn) {
                 return
             }
-            (this.runBtn.view as PIXI.Sprite).texture = PIXI.Texture.from('/ui/running.svg')
+            (this.runBtn.view as PIXI.Sprite).texture = PIXI.Texture.from(path + 'ui/running.svg')
         }
     }
 
     private async createRunBtn() {
-        const bg1 = PIXI.Texture.from('/ui/run.svg')
+        const bg1 = PIXI.Texture.from(path + 'ui/run.svg')
         const runBtn = new UI.Button(new PIXI.Sprite(bg1))
         runBtn.onPress.connect(this.runScript.bind(this))
         runBtn.view.width = 30
@@ -216,7 +218,7 @@ export class MainUi {
     }
 
     private createNewBtn() {
-        const bg = PIXI.Texture.from('/ui/add.svg')
+        const bg = PIXI.Texture.from(path + 'ui/add.svg')
         const newBtn = new PIXI.Container()
         const addBtn = new PIXI.Sprite(bg)
         addBtn.width = 30

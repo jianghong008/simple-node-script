@@ -1,6 +1,5 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'path'
-import { SvnToken } from '../core/svm/VM'
 import {spawn} from 'child_process'
 import { writeFileSync } from 'original-fs'
 let win:BrowserWindow|null = null
@@ -14,12 +13,12 @@ function createWindow() {
         icon: path.join(app.getAppPath(), 'public/sgs-ico.ico'),
     })
     win.removeMenu()
-    if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === undefined) {
+    if (process.env.NODE_ENV === 'development') {
         const port = process.argv[2] ?? '5173'
         win.webContents.openDevTools()
         win.loadURL('http://localhost:' + port)
     } else {
-        win.loadFile('dist/index.html')
+        win.loadFile(path.join(app.getAppPath(), 'dist/index.html'))
     }
     win.webContents.on('did-finish-load', () => {
         win?.webContents.session.webRequest.onHeadersReceived((details, callback) => {
@@ -62,7 +61,7 @@ function initEvents(){
     })
 }
 
-async function execute(e:Electron.IpcMainInvokeEvent,token: SvnToken[]) {
+async function execute(e:Electron.IpcMainInvokeEvent,token: any[]) {
     const vmPath = path.join(app.getAppPath(), 'bin/sgs-vm.exe')
     const tempPath = path.join(app.getAppPath(), 'data/temp.tp')
     const data = JSON.stringify(token)

@@ -8,28 +8,21 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "electron": "electron .",
+    "electron": "cross-env NODE_ENV=development electron .",
     "ec": "tsc src/electron/main.ts src/electron/preload.cts --outDir out --module nodenext",
-    "start": "electron-forge start",
-    "package": "electron-forge package",
-    "make": "electron-forge make"
+    "linux": "npm run ec && electron-packager . --platform=linux --arch=armv7l --electron-version=29.4.2 --overwrite",
+    "windows": "npm run ec && electron-packager . --win --arch=x64 --electron-version=29.4.2 --overwrite"
   },
   "devDependencies": {
-    "@electron-forge/cli": "^7.4.0",
-    "@electron-forge/maker-deb": "^7.4.0",
-    "@electron-forge/maker-rpm": "^7.4.0",
-    "@electron-forge/maker-squirrel": "^7.4.0",
-    "@electron-forge/maker-zip": "^7.4.0",
-    "@electron-forge/plugin-auto-unpack-natives": "^7.4.0",
-    "@electron-forge/plugin-fuses": "^7.4.0",
     "@electron/fuses": "^1.8.0",
+    "@electron/packager": "^18.3.2",
+    "cross-env": "^7.0.3",
     "electron": "^29.4.2",
     "typescript": "^5.2.2",
     "vite": "^5.2.0"
   },
   "dependencies": {
     "@pixi/ui": "^2.0.1",
-    "electron-squirrel-startup": "^1.0.1",
     "pixi.js": "^8.1.1"
   }
 }

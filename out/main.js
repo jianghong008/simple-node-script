@@ -13,13 +13,13 @@ function createWindow() {
         icon: path.join(app.getAppPath(), 'public/sgs-ico.ico'),
     });
     win.removeMenu();
-    if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === undefined) {
+    if (process.env.NODE_ENV === 'development') {
         const port = process.argv[2] ?? '5173';
         win.webContents.openDevTools();
         win.loadURL('http://localhost:' + port);
     }
     else {
-        win.loadFile('dist/index.html');
+        win.loadFile(path.join(app.getAppPath(), 'dist/index.html'));
     }
     win.webContents.on('did-finish-load', () => {
         win?.webContents.session.webRequest.onHeadersReceived((details, callback) => {
