@@ -18,8 +18,8 @@ export function setLang(lang: string) {
     window.localStorage.setItem(import.meta.env.VITE_TGPET_VERSION + '_lang', lang)
 }
 
-export async function loadCSV() {
-    const path = AppComUtils.getBasePath()+ 'local/lang.csv'
+export async function loadCSV(csvPath?: string) {
+    const path = csvPath || (AppComUtils.getBasePath() + 'local/lang.csv')
     const res = await fetch(path)
     const rowRge = /\n(?=(?:[^"]*"[^"]*")*[^"]*$)/g
     const rows = (await res.text()).split(rowRge)

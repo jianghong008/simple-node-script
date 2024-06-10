@@ -117,12 +117,13 @@ export class MainUi {
         this.logBox.scrollTop = this.logBox.scrollHeight
     }
     private async preload() {
-        
+
         await PIXI.Assets.load(path + 'ui/open.svg')
         await PIXI.Assets.load(path + 'ui/save.svg')
         await PIXI.Assets.load(path + 'ui/running.svg')
         await PIXI.Assets.load(path + 'ui/run.svg')
         await PIXI.Assets.load(path + 'ui/add.svg')
+        await PIXI.Assets.load(path + 'ui/export.svg')
         await PIXI.Assets.load(path + 'ui/teminal.svg')
     }
     private async createTopActions() {
@@ -146,6 +147,12 @@ export class MainUi {
         saveBtn.view.height = 30
         saveBtn.onPress.connect(this.saveScript.bind(this))
 
+        const bg3 = PIXI.Texture.from(path + 'ui/export.svg')
+        const exportBtn = new UI.Button(new PIXI.Sprite(bg3))
+        exportBtn.view.width = 30
+        exportBtn.view.height = 30
+        exportBtn.onPress.connect(this.exportScript.bind(this))
+
         const newBtn = this.createNewBtn()
 
         this.runBtn = await this.createRunBtn()
@@ -154,7 +161,7 @@ export class MainUi {
 
         const logBtn = this.createLogBtn()
 
-        list.addChild(loadBtn.view, saveBtn.view, newBtn, this.runBtn.view, logBtn.view)
+        list.addChild(loadBtn.view, saveBtn.view, exportBtn.view, newBtn, this.runBtn.view, logBtn.view)
 
     }
 
@@ -287,8 +294,15 @@ export class MainUi {
             y: DataBus.nodesBox.y,
             scale: DataBus.nodesBox.scale.x
         }, DataBus.nodes)
-        ComUtils.webDownload(json)
+        window.editor.saveFile('save script',json)
     }
+
+    private exportScript(){
+        const tokens = SgToken.create(DataBus.nodes)
+        const json = JSON.stringify(tokens)
+        window.editor.saveFile('export script',json,'sgs')
+    }
+
     private async runScript() {
         if (this.status === CompilerStatus.Running) {
             return
@@ -329,7 +343,10 @@ export class MainUi {
     }
     private async loadScript() {
         try {
-            const data = await ComUtils.webOpenFile()
+            const data = await window.editor.openFile('open script')
+            if (!data) {
+                return
+            }
             DataBus.nodesBox.removeChildren()
             const script = await SgScript.decode(data)
             DataBus.nodes = script.nodes
@@ -339,9 +356,8 @@ export class MainUi {
             DataBus.nodes.forEach(node => {
                 DataBus.nodesBox.addChild(node.view)
             })
-        } catch (error) {
-            this.queueLog(String(error))
+        } catch (_) {
+            this.queueLog('code parse error')
         }
-
     }
 }

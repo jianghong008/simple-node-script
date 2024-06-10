@@ -7,6 +7,12 @@ interface Compiler{
     resizeEditor(callback:()=>void):void
 }
 
+interface Editor{
+    openFile: (title:string) => Promise<string>
+    saveFile: (title:string,code:string,t='json') => void
+}
+
 interface Window{
     compiler: Compiler
+    editor: Editor
 }

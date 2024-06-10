@@ -23,7 +23,7 @@ export class NodeSocket {
         this.view = new PIXI.Graphics()
         this.view.y = y
         this.view.x = x
-        this.view.label = NodeSocket.name
+        this.view.label = 'NodeSocket'
         this.rerender()
         this.initEvents()
 

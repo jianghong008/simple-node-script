@@ -26,3 +26,4 @@ bin/
 *.tp
 out
 sg-script-*
+*.sgs
